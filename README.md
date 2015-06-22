@@ -1,5 +1,5 @@
 # dotfiles
-Priorities:
+Opinions:
 - Mac OS X
 - Solarized (light)
 - Terminal.app
@@ -7,4 +7,7 @@ Priorities:
 - vim
 - tmux
 
-Run `initialize.sh` to setup some tools/defaults that I use.
+To setup some tools/defaults that I use, run
+```zsh
+zsh -c "$(curl -fsSL https://raw.githubusercontent.com/el1t/dotfiiles/master/initialize)"
+```

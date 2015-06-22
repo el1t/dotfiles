@@ -1,0 +1,111 @@
+#!/bin/zsh
+clear
+# Allow force (-f) option
+if [[ $1 != '-f' && $1 != '--force' ]]; then
+	print -P "$(cat <<EOH
+This script sets up various defaults and configurations as preferred by me.
+ - %BImport config files%b into zsh
+ - %BChange default shell%b to /bin/zsh
+ - %BAdd \"Recent Applications\"%b stack to dock
+ - %BSet%b the following %Bdefaults:%b
+ -- Enable scroll-to-open on dock
+ -- Enable key repeat
+ -- Default to expanded save panel
+ - %BInstall prezto%b
+ -- %BImport%b original zsh config files into prezto
+ -- %BBackup%b original zsh config files
+ - %BInstall statusline%b prezto theme (el1t/statusline)
+ -- %BInstall%b custom Powerline-patched Menlo font
+ -- %BInstall%b zpreztorc from el1t/dotfiles
+ -- %BInstall%b Solarized Terminal.app profile
+ - %BInstall homebrew%b
+ -- %BBrew install%b python3, git, and vim
+
+tl;dr: %B%UOS X%u and %USolarized%u are best; %Uzsh%u not bash; %Uprezto%u not oh-my-zsh; %Uhomebrew%u not macports%b
+EOH)"
+	echo
+	read -q input\?'Continue? [yn] '
+	echo
+	[[ $input == n ]] && exit || unset input
+	echo
+fi
+
+# Copy over config files into zshrc
+if [[ ${SHELL:t} != 'zsh' ]]; then
+	read -q input\?'Import config into zsh?
+		(via sourcing originals, possible compatibility issues) [yn] '
+	if [[ $input == y ]]; then
+		unset input
+		function import_config {
+			local input="$HOME/"$1
+			local output="${ZDOTDIR:-$HOME}/"$2
+			if [[ -s $input && -w $output ]]; then
+				echo "Importing $input to $output"
+				print -P "\n# Import from ${SHELL:t}\nsource $input" >> $output
+			fi
+		}
+		case ${SHELL:t} in
+			(bash)
+				import_config '.bashrc' '.zshrc'
+				import_config '.bash_profile' '.zprofile'
+				import_config '.bash_login' '.zlogin'
+				import_config '.bash_logout' '.zlogout'
+				;;
+			(ksh)
+				import_config '.kshrc' '.zshrc'
+				;;
+			(sh)
+				import_config '.shrc' '.zshrc'
+				;;
+			(*)
+				print -P "Importing from ${SHELL:t} is unsupported. No files were imported."
+				;;
+		esac
+	else
+		unset input
+	fi
+	print -P '%B>>> Changing default shell to /bin/zsh%b'
+	chsh -s /bin/zsh
+fi
+
+# Setup defaults
+print -P '%B>>> Writing defaults%b'
+defaults write com.apple.dock persistent-others -array-add '{ "tile-data" = { "list-type" = 1; }; "tile-type" = "recents-tile"; }'
+echo 'Added recents folder'
+defaults write com.apple.dock scroll-to-open -bool TRUE
+echo 'Enabled scroll-to-open'
+defaults write -g ApplePressAndHoldEnabled -bool false
+echo 'Enabled key repeat'
+defaults write -g NSNavPanelExpandedStateForSaveMode -boolean true
+echo 'Enabled expanded save panel'
+print -P '%B>>> Restarting Dock%b'
+killall Dock
+
+# Prezto and theme setup
+zsh -c "set -- '-f'; $(curl -fsSL https://raw.githubusercontent.com/el1t/statusline/master/prezto/install)"
+
+print -P '%B>>> Importing zpreztorc from el1t/dotfiles%b'
+curl -fsSLo "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zpreztorc" \
+'https://raw.githubusercontent.com/el1t/dotfiles/master/.zprezto/runcoms/zpreztorc'
+
+# Install homebrew
+if (( $+commands[brew] )); then
+	# Update instead
+	print -P '%B>>> Updating brew formulae%b'
+	brew update
+	print -P '%B>>> Upgrading brew packages%b'
+	brew upgrade --all
+	print -P '%B>>> Cleaning brew cache%b'
+	rm -rf $(brew --cache)
+else
+	print -P '%B>>> Installing brew%b'
+	ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+fi
+print -P '%B>>> Installing brew packages%b'
+brew install python3 git vim
+
+echo '\nZsh is now the default shell.\n'
+read -q input\?'Restart terminal? (recommended) [yn] '
+echo
+[[ $input == n ]] && killall Terminal
+unset input
