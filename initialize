@@ -38,6 +38,16 @@ if [[ -d ~/.oh-my-zsh/ ]]; then
 	source "$ZSH/lib/functions.zsh"
 	if (( $+functions[uninstall_oh_my_zsh] )); then
 		uninstall_oh_my_zsh
+		# If oh-my-zsh switches to bash, it leaves a dirty .zshrc
+		if [[ ${SHELL:t} != 'zsh' ]]; then
+			print -P '%B>>> Switching back to zsh%b'
+			chsh -s /bin/zsh
+			if [[ -s ~/.zshrc ]]; then
+				print -P '%B%F{1}>>> Renaming .zshrc to .zshrc.omz-backup%f%b'
+				echo '(oh-my-zsh uninstall left a dirty .zshrc)'
+				mv ~/.zshrc ~/.zshrc.omz-backup
+			fi
+		fi
 	else
 		>&2 print -P '%F{1}%BError%b%f: Could not locate uninstall function'
 		echo 'Please uninstall oh-my-zsh manually'
@@ -57,7 +67,7 @@ if [[ ${SHELL:t} != 'zsh' ]]; then
 			local output="${ZDOTDIR:-$HOME}/"$2
 			if [[ -s $input && -w $output ]]; then
 				echo "Importing $input to $output"
-				print -P "\n# Import from ${SHELL:t}\nsource $input" >> $output
+				print -P "\n#\n# Import from ${SHELL:t}\n#\n\nsource $input" >> $output
 			fi
 		}
 		case ${SHELL:t} in
