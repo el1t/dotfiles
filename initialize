@@ -85,8 +85,8 @@ killall Dock
 zsh -c "set -- '-f'; $(curl -fsSL https://raw.githubusercontent.com/el1t/statusline/master/prezto/install)"
 
 print -P '%B>>> Importing zpreztorc from el1t/dotfiles%b'
-curl -fsSLo "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zpreztorc" \
-'https://raw.githubusercontent.com/el1t/dotfiles/master/.zprezto/runcoms/zpreztorc'
+# curl -fsSLo "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zpreztorc" \
+# 'https://raw.githubusercontent.com/el1t/dotfiles/master/.zprezto/runcoms/zpreztorc'
 
 # Install homebrew
 if (( $+commands[brew] )); then

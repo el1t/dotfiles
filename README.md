@@ -9,5 +9,5 @@ Opinions:
 
 To setup some tools/defaults that I use, run
 ```zsh
-zsh -c "$(curl -fsSL https://raw.githubusercontent.com/el1t/dotfiiles/master/initialize)"
+zsh -c "$(curl -fsSL https://raw.githubusercontent.com/el1t/dotfiles/master/initialize)"
 ```
