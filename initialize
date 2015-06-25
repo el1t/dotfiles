@@ -2,6 +2,17 @@
 clear
 # Allow force (-f) option
 if [[ $1 != '-f' && $1 != '--force' ]]; then
+	# Version check
+	min_zsh_version='5.0.0'
+	if ! autoload -Uz is-at-least || ! is-at-least $min_zsh_version; then
+		>&2 print "statusline: old shell detected, minimum supported: $min_zsh_version"
+		read -q input \?'Continue anyways? [yn] '
+		echo
+		[[ $input == n ]] && exit || unset input
+		echo
+	fi
+	unset min_zsh_version
+	# Info
 	print -P "$(cat <<EOH
 This script sets up various defaults and configurations as preferred by me.
  - %BImport config files%b into zsh
