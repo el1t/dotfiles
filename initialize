@@ -24,6 +24,9 @@ This script sets up various defaults and configurations as preferred by me.
  -- %BInstall%b custom Powerline-patched Menlo font
  -- %BInstall%b zpreztorc from el1t/dotfiles
  -- %BInstall%b Solarized Terminal.app profile (Mac only)
+ - %BInitialize%b vim settings
+ -- %BInstall%b vundle plugins
+ -- %BCreate%b vim folder structure
 For Macs only:
  - %BAdd \"Recent Applications\"%b stack to dock
  - %BSet%b the following %Bdefaults:%b
@@ -43,7 +46,10 @@ EOH)"
 	echo
 fi
 
+#
 # Uninstall oh-my-zsh
+#
+
 if [[ -d ~/.oh-my-zsh/ ]]; then
 	print -P '%B>>> Uninstalling oh-my-zsh%b'
 	local +h ZSH=~/.oh-my-zsh/
@@ -69,7 +75,10 @@ if [[ -d ~/.oh-my-zsh/ ]]; then
 	unset ZSH
 fi
 
+#
 # Copy over config files into zshrc
+#
+
 if [[ ${SHELL:t} != 'zsh' ]]; then
 	read -q input\?'Import config into zsh?
 		(via sourcing originals, possible compatibility issues) [yn] '
@@ -107,14 +116,62 @@ if [[ ${SHELL:t} != 'zsh' ]]; then
 	chsh -s /bin/zsh
 fi
 
+#
+# Vim setup
+#
 
+print -P '%B>>> Creating vim directory structure%b'
+[[ ! -d ~/.vim ]] && mkdir ~/.vim
+[[ ! -d ~/.vim/backups ]] && mkdir ~/.vim/backups
+[[ ! -d ~/.vim/bundle ]] && mkdir ~/.vim/bundle
+[[ ! -d ~/.vim/swaps ]] && mkdir ~/.vim/swaps
+[[ ! -d ~/.vim/undo ]] && mkdir ~/.vim/undo
+if [[ ! -s ~/.vim/bundle/Vundle.vim ]]; then
+	print -P '%B>>> Installing Vundle%b'
+	git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+fi
+if [[ -s ~/.vimrc ]]; then
+	read -q input\?'Existing .vimrc detected, overwrite? [yn] '
+	[[ $input == 'y' ]] && rm -f ~/.vimrc
+fi
+if [[ ! -s ~/.vimrc ]]; then
+	print -P '%B>>> Cloning .vimrc'
+	curl -fsSLo '~/.vimrc' https://raw.githubusercontent.com/el1t/dotfiles/master/.vimrc
+fi
+
+if (( $+commands[vim] )); then
+	input='y'
+	print -P '%B>>> Installing Vundle plugins%b'
+	vim +PluginInstall +qall
+else
+	input='n'
+	if [[ "$OSTYPE" == darwin* ]]; then
+		print -P 'Postponing plugin installation until vim is installed'
+	else
+		print -P '%F{1}%UWarning%u%f: vim not detected
+After installation, please run %Bvim +PluginInstall +qall%b to install plugins manually'
+	fi
+fi
+
+print -P '%B>>> Installing color themes'
+curl -fsSLo '~/.vim/colors/solarized.vim' \
+https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/colors/solarized.vim
+curl -fsSLo '~/.vim/bundle/vim-airline/autoload/airline/themes/powerline.vim' \
+https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/bundle/vim-airline/autoload/airline/themes/powerline.vim
+
+#
 # Prezto and theme setup
+#
+
 zsh -c "set -- '-f'; $(curl -fsSL https://raw.githubusercontent.com/el1t/statusline/master/prezto/install)"
 
 print -P '%B>>> Importing zpreztorc from el1t/dotfiles%b'
 # curl -fsSLo "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zpreztorc" \
 # 'https://raw.githubusercontent.com/el1t/dotfiles/master/.zprezto/runcoms/zpreztorc'
 
+#
+# Mac specifics
+#
 
 if [[ "$OSTYPE" == darwin* ]]; then
 	# Setup defaults
@@ -156,6 +213,12 @@ if [[ "$OSTYPE" == darwin* ]]; then
 	fi
 	print -P '%B>>> Installing homebrew packages%b'
 	brew install python3 git vim
+
+	# If plugin installation was postponed
+	if [[ $input == 'n' ]]; then
+		print -P '%B>>> Installing Vundle plugins%b'
+		vim +PluginInstall +qall
+	fi
 
 	echo '\nZsh is now the default shell.\n'
 	read -q input\?'Restart terminal? (recommended) [yn] '
