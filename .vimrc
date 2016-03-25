@@ -4,35 +4,40 @@ set nocompatible
 " Theme/Formatting {{{
 set background=light			" Use light background
 colorscheme solarized			" Set theme solarized
-set fillchars+=stl:\ ,stlnc:\	" Remove fillchars in statusline
+set fillchars+=stl:\ ,stlnc:\ "	" Remove fillchars in statusline
 set term=xterm-256color			" Declare 256 colors
 set encoding=utf-8 nobomb		" Use UTF-8 without BOM header
 syntax on						" Enable syntax highlighting
-set tabstop=4					" Make tabs as wide as four spaces
 set rnu nu						" Enable line numbers in hybrid mode
+set timeoutlen=100				" Change delay for repeated presses
 let g:airline_powerline_fonts = 1
 let g:airline_theme='powerline'
+let g:airline#extensions#tabline#enabled = 1
 " }}}
 
 " Vundle Setup {{{
 filetype off
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
-Plugin 'gmarik/Vundle.vim'	" Required
+Plugin 'VundleVim/Vundle.vim'	" Required
 
 " >>> Begin user plugins (call :PluginInstall to setup new plugins)
 
-Plugin 'tpope/vim-fugitive'			" Fugitive git wrapper
-Plugin 'airblade/vim-gitgutter'		" Git changes in gutter
-Plugin 'scrooloose/nerdtree'		" NERDTree file browser
-Plugin 'sjl/gundo.vim'				" Gundo undo tree browser
-Plugin 'bling/vim-airline'			" Airline for vim
-Plugin 'szw/vim-ctrlspace'			" Workspace/tab enhancement
+Plugin 'tpope/vim-fugitive'				" Fugitive git wrapper
+Plugin 'airblade/vim-gitgutter'			" Git changes in gutter
+Plugin 'scrooloose/nerdtree'			" NERDTree file browser
+Plugin 'sjl/gundo.vim'					" Gundo undo tree browser
+Plugin 'vim-airline/vim-airline'		" Airline for vim
+Plugin 'vim-ctrlspace/vim-ctrlspace'	" Workspace/tab enhancement
 
 " <<< End user plugins
 
+" Format indenting
+filetype plugin indent on		" Enable tabbing
+set tabstop=4					" Make tabs as wide as four spaces
+set shiftwidth=0				" Set tab button to insert tabstop-sized indent
+
 call vundle#end()
-filetype plugin indent on
 " }}}
 
 " Set History/Swap {{{
@@ -102,14 +107,14 @@ set backspace=indent,eol,start		" Allow backspace in insert mode
 cmap w!! w !sudo sh -c "cat > %"	" Save as root
 map <C-J> <C-W>j<C-W>_				" Open and maximize the split below
 map <C-K> <C-W>k<C-W>_				" Open and maximize the split above
-nnoremap j gj						" Visually move up/down, even on same line
+" nnoremap j gj						" Visually move up/down, even on same line
 nnoremap k gk
 nnoremap ' `						" Jump to line and col
 nnoremap ` '
 nnoremap <leader>:nohlsearch<CR>	" Hotkey to turn off search highlight
 nnoremap gV `[v`]					" Highlight last inserted text
 nnoremap <leader>s :mksession<CR>	" Save session
-nnoremap , za					" Open/close folds
+nnoremap , za						" Open/close folds
 nnoremap <leader>ss :call StripWhitespace()<CR>
 
 " Plugin keymappings
