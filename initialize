@@ -5,7 +5,7 @@ if [[ $1 != '-f' && $1 != '--force' ]]; then
 	# Version check
 	min_zsh_version='5.0.0'
 	if ! autoload -Uz is-at-least || ! is-at-least $min_zsh_version; then
-		>&2 print "statusline: old shell detected, minimum supported: $min_zsh_version"
+		>&2 print "initialize: old shell detected, minimum supported: $min_zsh_version"
 		read -q input \?'Continue anyways? [yn] '
 		echo
 		[[ $input == n ]] && exit || unset input
@@ -126,6 +126,7 @@ print -P '%B>>> Creating vim directory structure%b'
 [[ ! -d ~/.vim/bundle ]] && mkdir ~/.vim/bundle
 [[ ! -d ~/.vim/swaps ]] && mkdir ~/.vim/swaps
 [[ ! -d ~/.vim/undo ]] && mkdir ~/.vim/undo
+[[ ! -d ~/.vim/colors ]] && mkdir ~/.vim/colors
 if [[ ! -s ~/.vim/bundle/Vundle.vim ]]; then
 	print -P '%B>>> Installing Vundle%b'
 	git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
@@ -136,7 +137,7 @@ if [[ -s ~/.vimrc ]]; then
 fi
 if [[ ! -s ~/.vimrc ]]; then
 	print -P '%B>>> Cloning .vimrc'
-	curl -fsSLo '~/.vimrc' https://raw.githubusercontent.com/el1t/dotfiles/master/.vimrc
+	curl -fsSLo ~/.vimrc https://raw.githubusercontent.com/el1t/dotfiles/master/.vimrc
 fi
 
 if (( $+commands[vim] )); then
@@ -154,9 +155,9 @@ After installation, please run %Bvim +PluginInstall +qall%b to install plugins m
 fi
 
 print -P '%B>>> Installing color themes'
-curl -fsSLo '~/.vim/colors/solarized.vim' \
+curl -fsSLo ~/.vim/colors/solarized.vim \
 https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/colors/solarized.vim
-curl -fsSLo '~/.vim/bundle/vim-airline/autoload/airline/themes/powerline.vim' \
+curl -fsSLo ~/.vim/bundle/vim-airline/autoload/airline/themes/powerline.vim \
 https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/bundle/vim-airline/autoload/airline/themes/powerline.vim
 
 #
