@@ -104,18 +104,27 @@ endfunction
 let mapleader=" "
 set esckeys							" Allow cursor keys in insert mode
 set backspace=indent,eol,start		" Allow backspace in insert mode
-cmap w!! w !sudo sh -c "cat > %"	" Save as root
-map <C-J> <C-W>j<C-W>_				" Open and maximize the split below
-map <C-K> <C-W>k<C-W>_				" Open and maximize the split above
-" nnoremap j gj						" Visually move up/down, even on same line
-nnoremap k gk
-nnoremap ' `						" Jump to line and col
-nnoremap ` '
-nnoremap <leader>:nohlsearch<CR>	" Hotkey to turn off search highlight
-nnoremap gV `[v`]					" Highlight last inserted text
-nnoremap <leader>s :mksession<CR>	" Save session
-nnoremap , za						" Open/close folds
-nnoremap <leader>ss :call StripWhitespace()<CR>
+" Save as root
+cmap w!! w !sudo sh -c "cat > %"
+" Open and maximize the split below
+map <C-J> <C-W>j<C-W>_
+" Open and maximize the split above
+map <C-K> <C-W>k<C-W>_
+" Visually move up/down, even on same line
+nmap j gj
+nmap k gk
+" Jump to line and col
+nmap ' `
+nmap ` '
+" Hotkey to turn off search highlight
+nmap <leader>h :noh<CR>
+" Highlight last inserted text
+nmap gV `[v`]
+" Save session
+nmap <leader>s :mksession<CR>
+" Open/close folds
+nmap , za
+nmap <leader>ss :call StripWhitespace()<CR>
 
 " Plugin keymappings
 map <leader>e :NERDTreeToggle<CR>
@@ -123,7 +132,7 @@ map <leader>z :GundoToggle<CR>
 " }}}
 
 " Enable Powerline {{{
-"source /Users/El1t/Library/Python/2.7/lib/python/site-packages/powerline/bindings/vim/plugin/powerline.vim
+"source ~/Library/Python/2.7/lib/python/site-packages/powerline/bindings/vim/plugin/powerline.vim
 " }}}
 
 " vim:foldmethod=marker:foldlevel=0
