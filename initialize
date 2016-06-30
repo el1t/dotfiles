@@ -1,14 +1,14 @@
 #!/bin/zsh
 clear
 # Allow force (-f) option
-if [[ $1 != '-f' && $1 != '--force' ]]; then
+if [[ "$1" != '-f' && "$1" != '--force' ]]; then
 	# Version check
 	min_zsh_version='5.0.0'
-	if ! autoload -Uz is-at-least || ! is-at-least $min_zsh_version; then
+	if ! autoload -Uz is-at-least || ! is-at-least "$min_zsh_version"; then
 		>&2 print "initialize: old shell detected, minimum supported: $min_zsh_version"
 		read -q input \?'Continue anyways? [yn] '
 		echo
-		[[ $input == n ]] && exit || unset input
+		[[ "$input" == 'n' ]] && exit || unset input
 		echo
 	fi
 	unset min_zsh_version
@@ -41,7 +41,7 @@ tl;dr: %B%UOS X%u and %USolarized%u are best; %Uzsh%u not bash; %Uprezto%u not o
 	echo
 	read -q input\?'Continue? [yn] '
 	echo
-	[[ $input == n ]] && exit || unset input
+	[[ "$input" == 'n' ]] && exit || unset input
 	echo
 fi
 
@@ -56,7 +56,7 @@ if [[ -d ~/.oh-my-zsh/ ]]; then
 	if (( $+functions[uninstall_oh_my_zsh] )); then
 		uninstall_oh_my_zsh
 		# Detect if oh-my-zsh uninstall switched to bash
-		if [[ ${$(sh -c 'echo $SHELL'):t} != 'zsh' ]]; then
+		if [[ "${$(sh -c 'echo $SHELL'):t}" != 'zsh' ]]; then
 			print -P '%B>>> Switching back to zsh%b'
 			chsh -s /bin/zsh
 			# If oh-my-zsh switches to bash, it leaves a dirty .zshrc
@@ -78,20 +78,20 @@ fi
 # Copy over config files into zshrc
 #
 
-if [[ ${SHELL:t} != 'zsh' ]]; then
+if [[ "${SHELL:t}" != 'zsh' ]]; then
 	read -q input\?'Import config into zsh?
 		(via sourcing originals, possible compatibility issues) [yn] '
-	if [[ $input == y ]]; then
+	if [[ "$input" == 'y' ]]; then
 		unset input
 		function import_config {
 			local input="$HOME/$1"
 			local output="${ZDOTDIR:-$HOME}/$2"
-			if [[ -s $input && -w $output ]]; then
+			if [[ -s "$input" && -w "$output" ]]; then
 				echo "Importing $input to $output"
 				print -P "\n#\n# Import from ${SHELL:t}\n#\n\nsource $input" >> $output
 			fi
 		}
-		case ${SHELL:t} in
+		case "${SHELL:t}" in
 			(bash)
 				import_config '.bashrc' '.zshrc'
 				import_config '.bash_profile' '.zprofile'
@@ -132,7 +132,7 @@ if [[ ! -s ~/.vim/bundle/Vundle.vim ]]; then
 fi
 if [[ -s ~/.vimrc ]]; then
 	read -q input\?'Existing .vimrc detected, overwrite? [yn] '
-	[[ $input == 'y' ]] && rm -f ~/.vimrc
+	[[ "$input" == 'y' ]] && rm -f ~/.vimrc
 fi
 if [[ ! -s ~/.vimrc ]]; then
 	print -P '%B>>> Cloning .vimrc'
@@ -206,7 +206,7 @@ if [[ "$OSTYPE" == darwin* ]]; then
 		brew upgrade --all
 		print -P '%B>>> Cleaning brew cache%b'
 		brew cleanup
-		rm -rf $(brew --cache)
+		rm -rf "$(brew --cache)"
 	else
 		print -P '%B>>> Installing homebrew%b'
 		ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -215,7 +215,7 @@ if [[ "$OSTYPE" == darwin* ]]; then
 	brew install python3 git vim
 
 	# If plugin installation was postponed
-	if [[ $input == 'n' ]]; then
+	if [[ "$input" == 'n' ]]; then
 		print -P '%B>>> Installing Vundle plugins%b'
 		vim +PluginInstall +qall
 	fi
@@ -223,6 +223,6 @@ if [[ "$OSTYPE" == darwin* ]]; then
 	echo '\nZsh is now the default shell.\n'
 	read -q input\?'Restart terminal? (recommended) [yn] '
 	echo
-	[[ $input == n ]] && killall Terminal
+	[[ "$input" == 'n' ]] && killall Terminal
 fi
 unset input
