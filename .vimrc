@@ -16,28 +16,28 @@ let g:airline#extensions#tabline#enabled = 1
 " }}}
 
 " Vundle Setup {{{
-filetype off
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-Plugin 'VundleVim/Vundle.vim'	" Required
+call plug#begin('~/.vim/plugins')
 
-" >>> Begin user plugins (call :PluginInstall to setup new plugins)
+" >>> Begin user plugins (call :PlugInstall to setup new plugins)
 
-Plugin 'tpope/vim-fugitive'				" Fugitive git wrapper
-Plugin 'airblade/vim-gitgutter'			" Git changes in gutter
-Plugin 'scrooloose/nerdtree'			" NERDTree file browser
-Plugin 'sjl/gundo.vim'					" Gundo undo tree browser
-Plugin 'vim-airline/vim-airline'		" Airline for vim
-Plugin 'vim-ctrlspace/vim-ctrlspace'	" Workspace/tab enhancement
+Plug 'tpope/vim-fugitive'				" Fugitive git wrapper
+Plug 'tpope/vim-repeat'					" Allow repeating anything
+Plug 'tpope/vim-surround'				" Surround with braces/quotes
+Plug 'tpope/vim-commentary'				" Comment things out
+Plug 'tpope/vim-unimpaired'				" Useful pairs of keymaps
+Plug 'airblade/vim-gitgutter'			" Git changes in gutter
+Plug 'scrooloose/nerdtree'				" NERDTree file browser
+Plug 'sjl/gundo.vim'					" Gundo undo tree browser
+Plug 'vim-airline/vim-airline'			" Airline for vim
 
 " <<< End user plugins
 
 " Format indenting
-filetype plugin indent on		" Enable tabbing
+"filetype indent					" Enable tabbing
 set tabstop=4					" Make tabs as wide as four spaces
 set shiftwidth=0				" Set tab button to insert tabstop-sized indent
 
-call vundle#end()
+call plug#end()
 " }}}
 
 " Set History/Swap {{{
