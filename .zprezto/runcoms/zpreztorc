@@ -38,9 +38,19 @@ zstyle ':prezto:load' pmodule \
   'osx' \
   'rsync' \
   'fasd' \
+  'k' \
+  'python' \
   'history-substring-search' \
   'syntax-highlighting' \
+  'autosuggestions' \
   'prompt'
+
+#
+# Autosuggestions
+#
+
+# Set the query found color.
+zstyle ':prezto:module:autosuggestions:color' found 'fg=14'
 
 #
 # Editor
@@ -133,7 +143,9 @@ zstyle ':prezto:module:syntax-highlighting' styles \
   'path' 'fg=cyan' \
   'path_approx' 'none' \
   'path_prefix' 'none' \
-  'reserved-word' 'fg=black,bold'
+  'reserved-word' 'fg=black,bold' \
+  'bracket-level-6' 'fg=9,bold' \
+  'bracket-level-7' 'fg=13,bold' \
 
 # Set syntax highlighting patterns
 zstyle ':prezto:module:syntax-highlighting' patterns \
