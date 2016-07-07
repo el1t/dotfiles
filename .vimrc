@@ -15,7 +15,7 @@ let g:airline_theme='powerline'
 let g:airline#extensions#tabline#enabled = 1
 " }}}
 
-" Vundle Setup {{{
+" vim-plug Setup {{{
 call plug#begin('~/.vim/plugins')
 
 " >>> Begin user plugins (call :PlugInstall to setup new plugins)

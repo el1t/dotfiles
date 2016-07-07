@@ -121,14 +121,15 @@ fi
 
 print -P '%B>>> Creating vim directory structure%b'
 [[ ! -d ~/.vim ]] && mkdir ~/.vim
+[[ ! -d ~/.vim/autoload ]] && mkdir ~/.vim/autoload
 [[ ! -d ~/.vim/backups ]] && mkdir ~/.vim/backups
-[[ ! -d ~/.vim/bundle ]] && mkdir ~/.vim/bundle
+[[ ! -d ~/.vim/plugins ]] && mkdir ~/.vim/plugins
 [[ ! -d ~/.vim/swaps ]] && mkdir ~/.vim/swaps
 [[ ! -d ~/.vim/undo ]] && mkdir ~/.vim/undo
 [[ ! -d ~/.vim/colors ]] && mkdir ~/.vim/colors
-if [[ ! -s ~/.vim/bundle/Vundle.vim ]]; then
-	print -P '%B>>> Installing Vundle%b'
-	git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+if [[ ! -s ~/.vim/autoload/plug.vim ]]; then
+	print -P '%B>>> Installing vim-plug%b'
+	curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 fi
 if [[ -s ~/.vimrc ]]; then
 	read -q input\?'Existing .vimrc detected, overwrite? [yn] '
@@ -141,8 +142,8 @@ fi
 
 if (( $+commands[vim] )); then
 	input='y'
-	print -P '%B>>> Installing Vundle plugins%b'
-	vim +PluginInstall +qall
+	print -P '%B>>> Installing vim-plug plugins%b'
+	vim +PlugInstall
 else
 	input='n'
 	if [[ "$OSTYPE" == darwin* ]]; then
@@ -156,8 +157,8 @@ fi
 print -P '%B>>> Installing color themes'
 curl -fsSLo ~/.vim/colors/solarized.vim \
 https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/colors/solarized.vim
-curl -fsSLo ~/.vim/bundle/vim-airline/autoload/airline/themes/powerline.vim \
-https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/bundle/vim-airline/autoload/airline/themes/powerline.vim
+curl -fsSLo ~/.vim/plugins/vim-airline/autoload/airline/themes/powerline.vim \
+https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/plugins/vim-airline/autoload/airline/themes/powerline.vim
 
 #
 # Prezto and theme setup
