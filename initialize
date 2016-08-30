@@ -1,5 +1,11 @@
 #!/bin/zsh
-clear
+
+# Check for command line tools
+if [[ "$OSTYPE" == darwin* ]] && (( ! $+commands[xcode-select] )); then
+	echo 'initialize: install xcode command line tools manually' > &2
+	exit 1
+fi
+
 # Allow force (-f) option
 if [[ "$1" != '-f' && "$1" != '--force' ]]; then
 	# Version check
@@ -13,6 +19,7 @@ if [[ "$1" != '-f' && "$1" != '--force' ]]; then
 	fi
 	unset min_zsh_version
 	# Info
+	clear
 	print -P "
 This script sets up various defaults and configurations as preferred by me.
  - %BImport config files%b into zsh
@@ -28,6 +35,7 @@ This script sets up various defaults and configurations as preferred by me.
  -- %BInstall%b vundle plugins
  -- %BCreate%b vim folder structure
 For Macs only:
+ - %BInstall%b xcode command line tools
  - %BAdd \"Recent Applications\"%b stack to dock
  - %BSet%b the following %Bdefaults:%b
  -- Enable scroll-to-open on dock
@@ -43,6 +51,15 @@ tl;dr: %B%UOS X%u and %USolarized%u are best; %Uzsh%u not bash; %Uprezto%u not o
 	echo
 	[[ "$input" == 'n' ]] && exit || unset input
 	echo
+fi
+
+#
+# Install xcode command line tools
+#
+
+if [[ "$OSTYPE" == darwin* ]] && ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables > /dev/null; then
+	print -P '%B>>> Installing XCode command line tools%b'
+	xcode-select --install
 fi
 
 #
@@ -88,7 +105,7 @@ if [[ "${SHELL:t}" != 'zsh' ]]; then
 			local output="${ZDOTDIR:-$HOME}/$2"
 			if [[ -s "$input" && -w "$output" ]]; then
 				echo "Importing $input to $output"
-				print -P "\n#\n# Import from ${SHELL:t}\n#\n\nsource $input" >> $output
+				print -P "\n#\n# Import from ${SHELL:t}\n#\n\nsource $input" >> "$output"
 			fi
 		}
 		case "${SHELL:t}" in
@@ -112,6 +129,7 @@ if [[ "${SHELL:t}" != 'zsh' ]]; then
 		unset input
 	fi
 	print -P '%B>>> Changing default shell to /bin/zsh%b'
+	echo 'chsh -s /bin/zsh' | tee -a "$LOGFILE"
 	chsh -s /bin/zsh
 fi
 
