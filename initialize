@@ -116,8 +116,29 @@ dotfiles: initialize ($(date))"'
 
 if [[ "$OSTYPE" == darwin* ]] && ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables > /dev/null; then
 	print -P '%B>>> Installing XCode command line tools%b'
-	echo 'sudo xcode-select --install' | _initialize_echo_log
-	sudo xcode-select --install
+	# Attempt headless install, from homebrew installation
+	echo 'Searching online for the Command Line Tools' | _initialize_echo_log
+	local placeholder='/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress'
+	echo "touch \"$placeholder\"" | _initialize_log
+	touch "$placeholder"
+	local label=$(softwareupdate -l | grep -B 1 -E "Command Line (Developer|Tools)" | awk -F"*" '/^ +\\*/ {print $2}' | sed 's/^ *//' | head -n1)
+	echo "sudo softwareupdate -i \"$label\"" | _initialize_echo_log
+	sudo softwareupdate -i "$label"
+	echo "rm -f \"$placeholder\"" | _initialize_log
+	rm -f "$placeholder"
+	echo 'sudo xcode-select --switch /Library/Developer/CommandLineTools' | _initialize_log
+	sudo xcode-select --switch /Library/Developer/CommandLineTools
+
+	# Check if headless install worked
+	if ! pkgutil --pkg-info=con.apple.pkg.CLTools_Executables > /dev/null; then
+		echo 'headless installation failed' | _initialize_msg
+		echo 'Installing the Command Line Tools (expect a GUI popup):' | _initialize_echo_log
+		echo 'sudo xcode-select --install' | _initialize_echo_log
+		sudo xcode-select --install
+		echo 'sudo xcode-select --switch /Library/Developer/CommandLineTools' | _initialize_echo_log
+		sudo xcode-select --switch /Library/Developer/CommandLineTools
+	fi
+	# sudo xcodebuild -license
 fi
 
 #
