@@ -2,19 +2,31 @@
 
 # Check for command line tools
 if [[ "$OSTYPE" == darwin* ]] && (( ! $+commands[xcode-select] )); then
-	echo 'initialize: install xcode command line tools manually' > &2
+	>&2 echo 'initialize: install xcode command line tools manually'
 	exit 1
 fi
 
-# Allow force (-f) option
-if [[ "$1" != '-f' && "$1" != '--force' ]]; then
+#
+# Parse options
+#
+local -a force no-log output quiet verbose
+zparseopts -D \
+	f=force -force=force \
+	-no-log=no-log
+	o:=output -output:=output \
+	q=quiet -quiet=quiet
+	v=verbose -verbose=verbose
+
+# Show welcome message
+if [[ -n "$force" ]]; then
 	# Version check
 	min_zsh_version='5.0.0'
 	if ! autoload -Uz is-at-least || ! is-at-least "$min_zsh_version"; then
 		>&2 print "initialize: old shell detected, minimum supported: $min_zsh_version"
 		read -q input \?'Continue anyways? [yn] '
 		echo
-		[[ "$input" == 'n' ]] && exit || unset input
+		if [[ "$input" == 'n' ]] exit
+		unset input
 		echo
 	fi
 	unset min_zsh_version
@@ -45,13 +57,58 @@ For Macs only:
  -- %BBrew install%b %Upython3%u, %Ugit%u, and %Uvim%u
 
 tl;dr: %B%UOS X%u and %USolarized%u are best; %Uzsh%u not bash; %Uprezto%u not oh-my-zsh; %Uhomebrew%u not macports%b"
-	[[ -d ~/.oh-my-zsh/ ]] && print -P '%F{1}%UWarning%u%f: oh-my-zsh will be uninstalled'
+	if [[ -d ~/.oh-my-zsh/ ]] print -P '%F{1}%UWarning%u%f: oh-my-zsh will be uninstalled'
 	echo
 	read -q input\?'Continue? [yn] '
 	echo
-	[[ "$input" == 'n' ]] && exit || unset input
+	if [[ "$input" == 'n' ]] exit
+	unset input
 	echo
 fi
+
+# Setup logging
+setopt LOCAL_OPTIONS POSIX_BUILTINS
+local LOGFILE='dotfiles-initialize.log'
+if [[ -n "$output" ]] LOGFILE="$output[2]"
+unset output
+
+# Echo and log
+_initialize_echo_log() {
+	if [[ -z "$quiet" ]]; then
+		# Print and log
+		tee -a "$LOGFILE"
+	elif [[ -z "$no-log" ]]; then
+		# Log only
+		cat >>! "$LOGFILE"
+	else
+		# Print only
+		cat
+	fi
+}
+
+# Log only, unless verbose
+_initialize_log() {
+	if [[ -n "$verbose" ]]; then
+		_initialize_echo_log
+	elif [[ -z "$no-log" ]]; then
+		cat >>! "$LOGFILE"
+	fi
+}
+
+# Log only, always
+_initialize_msg() {
+	if [[ -z "$no-log" ]] cat >>! "$LOGFILE"
+}
+
+# Ignore print if quiet flag is set
+print() {
+	if [[ -z "$quiet" ]] command print "$@"
+}
+
+echo '
+-------------------------------------'"
+dotfiles: initialize ($(date))"'
+-------------------------------------' | _initialize_msg
 
 #
 # Install xcode command line tools
@@ -59,7 +116,8 @@ fi
 
 if [[ "$OSTYPE" == darwin* ]] && ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables > /dev/null; then
 	print -P '%B>>> Installing XCode command line tools%b'
-	xcode-select --install
+	echo 'sudo xcode-select --install' | _initialize_echo_log
+	sudo xcode-select --install
 fi
 
 #
@@ -68,25 +126,32 @@ fi
 
 if [[ -d ~/.oh-my-zsh/ ]]; then
 	print -P '%B>>> Uninstalling oh-my-zsh%b'
+	echo 'oh-my-zsh detected, uninstalling' | _initialize_msg
 	local +h ZSH=~/.oh-my-zsh/
+	echo "source $ZSH/lib/functions.zsh" | _initialize_log
 	source "$ZSH/lib/functions.zsh"
 	if (( $+functions[uninstall_oh_my_zsh] )); then
+		echo 'running function uninstall_oh_my_zsh' | _initialize_msg
 		uninstall_oh_my_zsh
 		# Detect if oh-my-zsh uninstall switched to bash
 		if [[ "${$(sh -c 'echo $SHELL'):t}" != 'zsh' ]]; then
 			print -P '%B>>> Switching back to zsh%b'
+			echo 'chsh -s /bin/zsh' | _initialize_log
 			chsh -s /bin/zsh
 			# If oh-my-zsh switches to bash, it leaves a dirty .zshrc
 			if [[ -s ~/.zshrc ]]; then
 				print -P '%B%F{1}>>> Renaming .zshrc to .zshrc.omz-backup%f%b'
-				echo '(oh-my-zsh uninstall left a dirty .zshrc)'
+				print '(oh-my-zsh uninstall left a dirty .zshrc)'
+				echo 'oh-my-zsh left dirty .zshrc' | _initialize_msg
+				echo 'mv ~/.zshrc ~/.zshrc.omz-backup' | _initialize_log
 				mv ~/.zshrc ~/.zshrc.omz-backup
 			fi
 		fi
 	else
 		>&2 print -P '%F{1}%BError%b%f: Could not locate uninstall function'
-		echo 'Please uninstall oh-my-zsh manually'
-		exit
+		print 'Please uninstall oh-my-zsh manually'
+		echo 'error: oh-my-zsh is installed but function uninstall_oh_my_zsh does not exist' | _initialize_msg
+		exit 1
 	fi
 	unset ZSH
 fi
@@ -96,16 +161,21 @@ fi
 #
 
 if [[ "${SHELL:t}" != 'zsh' ]]; then
-	read -q input\?'Import config into zsh?
-		(via sourcing originals, possible compatibility issues) [yn] '
+	if [[ -z "$force" ]]; then
+		read -q input\?'Import config into zsh? (via sourcing originals, possible compatibility issues) [yn] '
+		print
+	else
+		input='y'
+	fi
 	if [[ "$input" == 'y' ]]; then
 		unset input
+		echo 'importing old shell configs into zsh' | _initialize_msg
 		function import_config {
 			local input="$HOME/$1"
 			local output="${ZDOTDIR:-$HOME}/$2"
 			if [[ -s "$input" && -w "$output" ]]; then
-				echo "Importing $input to $output"
-				print -P "\n#\n# Import from ${SHELL:t}\n#\n\nsource $input" >> "$output"
+				echo "Importing $input to $output" | _initialize_echo_log
+				print -P "\n#\n# Import from ${SHELL:t}\n#\n\nsource $input" >>! "$output"
 			fi
 		}
 		case "${SHELL:t}" in
@@ -123,13 +193,15 @@ if [[ "${SHELL:t}" != 'zsh' ]]; then
 				;;
 			(*)
 				print -P "Importing from ${SHELL:t} is unsupported. No files were imported."
+				echo "${SHELL:t} import is unsupported" | _initialize_msg
 				;;
 		esac
 	else
 		unset input
+		echo 'skipped importing old shell configs' | _initialize_msg
 	fi
 	print -P '%B>>> Changing default shell to /bin/zsh%b'
-	echo 'chsh -s /bin/zsh' | tee -a "$LOGFILE"
+	echo 'chsh -s /bin/zsh' | _initialize_log
 	chsh -s /bin/zsh
 fi
 
@@ -137,42 +209,69 @@ fi
 # Vim setup
 #
 
-print -P '%B>>> Creating vim directory structure%b'
-[[ ! -d ~/.vim ]] && mkdir ~/.vim
-[[ ! -d ~/.vim/autoload ]] && mkdir ~/.vim/autoload
-[[ ! -d ~/.vim/backups ]] && mkdir ~/.vim/backups
-[[ ! -d ~/.vim/plugins ]] && mkdir ~/.vim/plugins
-[[ ! -d ~/.vim/swaps ]] && mkdir ~/.vim/swaps
-[[ ! -d ~/.vim/undo ]] && mkdir ~/.vim/undo
-[[ ! -d ~/.vim/colors ]] && mkdir ~/.vim/colors
+# Create missing directories
+local -a vim_dirs
+local directory printed
+vim_dirs=(autoload backups plugins swaps undo colors)
+for directory in $vim_dirs; do
+	if [[ ! -d ~/.vim/"$directory" ]]; then
+		if [[ -z "$printed" ]]; then
+			print -P '%B>>> Creating vim directory structure%b'
+			printed='y'
+		fi
+		echo 'mkdir -p "$directory"' | _initialize_echo_log
+		mkdir -p ~/.vim/"$directory"
+	fi
+done
+if [[ -z "$printed" ]] echo 'no additional vim directories created' | _initialize_msg
+unset vim_dirs directory printed
+
+# Install vim-plug
 if [[ ! -s ~/.vim/autoload/plug.vim ]]; then
 	print -P '%B>>> Installing vim-plug%b'
-	curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-fi
-if [[ -s ~/.vimrc ]]; then
-	read -q input\?'Existing .vimrc detected, overwrite? [yn] '
-	[[ "$input" == 'y' ]] && rm -f ~/.vimrc
-fi
-if [[ ! -s ~/.vimrc ]]; then
-	print -P '%B>>> Cloning .vimrc'
-	curl -fsSLo ~/.vimrc https://raw.githubusercontent.com/el1t/dotfiles/master/.vimrc
+	echo 'curl -fsSLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim' | _initialize_echo_log
+	curl -fsSLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim | _initialize_echo_log
 fi
 
+# Setup .vimrc
+if [[ -s ~/.vimrc ]]; then
+	if [[ -z "$force" ]]; then
+		read -q input\?'Existing .vimrc detected, overwrite? [yn] '
+	else
+		input='y'
+	fi
+	if [[ "$input" == 'y' ]]; then
+		echo 'mv ~/.vimrc ~/.vimrc_backup' | _initialize_log
+		mv ~/.vimrc ~/.vimrc_backup
+	fi
+fi
+if [[ ! -s ~/.vimrc ]]; then
+	print -P '%B>>> Cloning .vimrc%b'
+	echo 'curl -fsSLo ~/.vimrc https://raw.githubusercontent.com/el1t/dotfiles/master/.vimrc' | _initialize_echo_log
+	curl -fsSLo ~/.vimrc https://raw.githubusercontent.com/el1t/dotfiles/master/.vimrc | _initialize_echo_log
+fi
+
+# Install vim-plug plugins
 if (( $+commands[vim] )); then
 	input='y'
 	print -P '%B>>> Installing vim-plug plugins%b'
+	echo 'installing vim-plug plugins' | _initialize_msg
+	echo 'vim +PlugInstall' | _initialize_echo_log
 	vim +PlugInstall
 else
 	input='n'
+	echo 'vim not found' | _initialize_msg
 	if [[ "$OSTYPE" == darwin* ]]; then
 		echo 'Postponing plugin installation until vim is installed'
+		echo 'vim plugins installation postponed' | _initialize_msg
 	else
 		print -P '%F{1}%UWarning%u%f: vim not detected
-After installation, please run %Bvim +PluginInstall +qall%b to install plugins manually'
+After installation, please run %Bvim +PlugInstall%b to install plugins manually'
+		echo 'vim plugins not installed' | _initialize_msg
 	fi
 fi
 
-print -P '%B>>> Installing color themes'
+print -P '%B>>> Installing color themes%b'
 curl -fsSLo ~/.vim/colors/solarized.vim \
 https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/colors/solarized.vim
 curl -fsSLo ~/.vim/plugins/vim-airline/autoload/airline/themes/powerline.vim \
@@ -182,6 +281,10 @@ https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/plugins/vim-airline/
 # Prezto and theme setup
 #
 
+print -P '%B>>> Installing prezto and statusline%b'
+echo 'deferring install to statusline' | _initialize_msg
+echo "zsh -c \"set -- '-f'; \$(curl -fsSL https://raw.githubusercontent.com/el1t/statusline/master/prezto/install)\"" | _initialize_echo_log
+# TODO: set matching flags for statusline script
 zsh -c "set -- '-f'; $(curl -fsSL https://raw.githubusercontent.com/el1t/statusline/master/prezto/install)"
 
 # print -P '%B>>> Importing zpreztorc from el1t/dotfiles%b'
@@ -194,54 +297,77 @@ zsh -c "set -- '-f'; $(curl -fsSL https://raw.githubusercontent.com/el1t/statusl
 
 if [[ "$OSTYPE" == darwin* ]]; then
 	# Setup defaults
-	print -P '%B>>> Writing defaults%b'
-	echo 'Adding recents folder to dock'
+	print -P '%B>>> Writing to system settings%b'
+	echo 'Adding recents folder to dock' | _initialize_echo_log
+	echo "defaults write com.apple.dock persistent-others -array-add '{ \"tile-data\" = { \"list-type\" = 1; }; \"tile-type\" = \"recents-tile\"; }'" | _initialize_log
 	defaults write com.apple.dock persistent-others -array-add '{ "tile-data" = { "list-type" = 1; }; "tile-type" = "recents-tile"; }'
-	echo 'Enabling scroll-to-open'
+	echo 'Enabling scroll-to-open' | _initialize_echo_log
+	echo 'defaults write com.apple.dock scroll-to-open -bool TRUE' | _initialize_log
 	defaults write com.apple.dock scroll-to-open -bool TRUE
-	echo 'Enabling key repeat'
+	echo 'Enabling key repeat' | _initialize_echo_log
+	echo 'defaults write -g ApplePressAndHoldEnabled -bool false' | _initialize_log
 	defaults write -g ApplePressAndHoldEnabled -bool false
-	echo 'Enabling expanded save panel'
+	echo 'Enabling expanded save panel' | _initialize_echo_log
+	echo 'defaults write -g NSNavPanelExpandedStateForSaveMode -boolean true' | _initialize_log
 	defaults write -g NSNavPanelExpandedStateForSaveMode -boolean true
-	echo 'Enabling debug menu in App Store'
+	echo 'Enabling debug menu in App Store' | _initialize_echo_log
+	echo 'defaults write com.apple.appstore ShowDebugMenu -bool true' | _initialize_log
 	defaults write com.apple.appstore ShowDebugMenu -bool true
-	echo 'Enabling Airdrop scan all interfaces'
+	echo 'Enabling Airdrop scan all interfaces' | _initialize_echo_log
+	echo 'defaults write com.apple.NetworkBrowser BrowseAllInterfaces 1' | _initialize_log
 	defaults write com.apple.NetworkBrowser BrowseAllInterfaces 1
-	echo 'Enabling develop mode in Safari'
+	echo 'Enabling develop mode in Safari' | _initialize_echo_log
+	echo 'defaults write com.apple.Safari IncludeInternalDebugMenu -bool true' | _initialize_log
 	defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
+	echo 'defaults write com.apple.Safari IncludeDevelopMenu -bool true' | _initialize_log
 	defaults write com.apple.Safari IncludeDevelopMenu -bool true
+	echo 'defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true' | _initialize_log
 	defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
+	echo "defaults write com.apple.Safari 'com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled' -bool true" | _initialize_log
 	defaults write com.apple.Safari 'com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled' -bool true
+	echo 'defaults write NSGlobalDomain WebKitDeveloperExtras -bool true' | _initialize_log
 	defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
 	print -P '%B>>> Restarting Dock%b'
+	echo 'killall Dock' | _initialize_echo_log
 	killall Dock
 
 	# Install homebrew
 	if (( $+commands[brew] )); then
+		echo 'brew exists, updating instead' | _initialize_msg
 		# Update instead
 		print -P '%B>>> Updating brew formulae%b'
-		brew update
+		echo 'brew update' | _initialize_echo_log
+		brew update | _initialize_log
 		print -P '%B>>> Upgrading installed packages%b'
-		brew upgrade --all
+		echo 'brew upgrade --all' | _initialize_echo_log
+		brew upgrade --all | _initialize_log
 		print -P '%B>>> Cleaning brew cache%b'
-		brew cleanup
+		echo 'brew cleanup' | _initialize_echo_log
+		brew cleanup | _initialize_log
+		echo 'rm -rf "$(brew --cache)"' | _initialize_echo_log
 		rm -rf "$(brew --cache)"
 	else
 		print -P '%B>>> Installing homebrew%b'
 		ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 	fi
 	print -P '%B>>> Installing homebrew packages%b'
-	brew install python3 git vim
+	echo 'brew install python3 git vim' | _initialize_echo_log
+	brew install python3 git vim | _initialize_log
 
 	# If plugin installation was postponed
 	if [[ "$input" == 'n' ]]; then
-		print -P '%B>>> Installing Vundle plugins%b'
-		vim +PluginInstall +qall
+		print -P '%B>>> Installing vim-plug plugins%b'
+		echo 'vim +PlugInstall' | _initialize_echo_log
+		vim +PlugInstall
 	fi
 
-	echo '\nZsh is now the default shell.\n'
-	read -q input\?'Restart terminal? (recommended) [yn] '
-	echo
-	[[ "$input" == 'n' ]] && killall Terminal
+	print '\nZsh is now the default shell.\n'
+	if [[ -z "$force" ]]; then
+		read -q input\?'Restart terminal? (recommended) [yn] '
+		print
+	else
+		input='y'
+	fi
+	if [[ "$input" == 'y' ]] killall Terminal
 fi
 unset input
