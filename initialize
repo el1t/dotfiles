@@ -12,9 +12,9 @@ fi
 local -a force no_log output quiet verbose
 zparseopts -D \
 	f=force -force=force \
-	-no-log=no_log
+	-no-log=no_log \
 	o:=output -output:=output \
-	q=quiet -quiet=quiet
+	q=quiet -quiet=quiet \
 	v=verbose -verbose=verbose
 
 # Show welcome message
