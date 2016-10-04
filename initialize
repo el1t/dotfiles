@@ -9,18 +9,48 @@ fi
 #
 # Parse options
 #
-local -a force no_log output quiet verbose
+
+local -a force help no_log output quiet verbose
 zparseopts -D \
 	f=force -force=force \
+	-help=help \
 	-no-log=no_log \
 	o:=output -output:=output \
 	q=quiet -quiet=quiet \
 	v=verbose -verbose=verbose
 
+# Display help and detect illegal options
+if [[ -n "$help" || -n "$@" ]]; then
+	if [[ -n "$@" ]] >&2 echo "initialize: illegal option $@"
+	print -P \
+"usage: initialize [-fqv] [-o output] [--help] [--no-log]
+
+%BOPTIONS%b
+	-f, --force
+		Run without confirmation or zsh version check.
+
+	--help
+		Display this help menu.
+
+	--no-log
+		Disable all logging (no log file will be created).
+
+	-o, --output <output_file>
+		Specify a filename for the log file. Default is dotfiles-initialize.log
+
+	-q, --quiet
+		Suppress as much output as possible.
+
+	-v, --verbose
+		Print all command outputs to console."
+	if [[ -n "$@" ]] exit 1
+	exit
+fi
+
 # Show welcome message
 if [[ -n "$force" ]]; then
 	# Version check
-	min_zsh_version='5.0.0'
+	local input min_zsh_version='5.0.0'
 	if ! autoload -Uz is-at-least || ! is-at-least "$min_zsh_version"; then
 		>&2 print "initialize: old shell detected, minimum supported: $min_zsh_version"
 		read -q input \?'Continue anyways? [yn] '
@@ -56,7 +86,8 @@ For Macs only:
  - %BInstall homebrew%b
  -- %BBrew install%b %Upython3%u, %Ugit%u, and %Uvim%u
 
-tl;dr: %B%UOS X%u and %USolarized%u are best; %Uzsh%u not bash; %Uprezto%u not oh-my-zsh; %Uhomebrew%u not macports%b"
+tl;dr: %B%UMacOS%u and %USolarized%u; %Uzsh%u not bash; %Uprezto%u not oh-my-zsh; %Uhomebrew%u not macports%b"
+	if [[ "$OSTYPE" != darwin* ]] print -P '%F{1}%UWarning%u%f: Partial support for this OS'
 	if [[ -d ~/.oh-my-zsh/ ]] print -P '%F{1}%UWarning%u%f: oh-my-zsh will be uninstalled'
 	echo
 	read -q input\?'Continue? [yn] '
@@ -294,9 +325,9 @@ fi
 
 print -P '%B>>> Installing color themes%b'
 curl -fsSLo ~/.vim/colors/solarized.vim \
-https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/colors/solarized.vim
+'https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/colors/solarized.vim'
 curl -fsSLo ~/.vim/plugins/vim-airline/autoload/airline/themes/powerline.vim \
-https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/plugins/vim-airline/autoload/airline/themes/powerline.vim
+'https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/plugins/vim-airline/autoload/airline/themes/powerline.vim'
 
 #
 # Prezto and theme setup
@@ -385,7 +416,7 @@ if [[ "$OSTYPE" == darwin* ]]; then
 	print '\nZsh is now the default shell.\n'
 	if [[ -z "$force" ]]; then
 		read -q input\?'Restart terminal? (recommended) [yn] '
-		print
+		echo
 	else
 		input='y'
 	fi
