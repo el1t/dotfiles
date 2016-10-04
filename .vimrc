@@ -2,14 +2,14 @@
 set nocompatible
 
 " Theme/Formatting {{{
-set background=light			" Use light background
+set background=dark				" Use light background
 colorscheme solarized			" Set theme solarized
 set fillchars+=stl:\ ,stlnc:\ "	" Remove fillchars in statusline
 set term=xterm-256color			" Declare 256 colors
 set encoding=utf-8 nobomb		" Use UTF-8 without BOM header
 syntax on						" Enable syntax highlighting
-set rnu nu						" Enable line numbers in hybrid mode
-set timeoutlen=100				" Change delay for repeated presses
+set nu							" Enable line numbers
+set timeoutlen=150				" Change delay for repeated presses
 let g:airline_powerline_fonts = 1
 let g:airline_theme='powerline'
 let g:airline#extensions#tabline#enabled = 1
@@ -34,6 +34,7 @@ Plug 'vim-airline/vim-airline'			" Airline for vim
 
 " Format indenting
 "filetype indent					" Enable tabbing
+set noexpandtab
 set tabstop=4					" Make tabs as wide as four spaces
 set shiftwidth=0				" Set tab button to insert tabstop-sized indent
 
@@ -113,18 +114,14 @@ map <C-K> <C-W>k<C-W>_
 " Visually move up/down, even on same line
 nmap j gj
 nmap k gk
-" Jump to line and col
-nmap ' `
-nmap ` '
-" Hotkey to turn off search highlight
 nmap <leader>h :noh<CR>
 " Highlight last inserted text
 nmap gV `[v`]
 " Save session
 nmap <leader>s :mksession<CR>
 " Open/close folds
-nmap , za
-nmap <leader>ss :call StripWhitespace()<CR>
+nmap <leader><leader> za
+nmap <leader>w :call StripWhitespace()<CR>
 
 " Plugin keymappings
 map <leader>e :NERDTreeToggle<CR>

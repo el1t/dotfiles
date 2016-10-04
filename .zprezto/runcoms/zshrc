@@ -11,27 +11,44 @@ if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
 fi
 
 # Customize to your needs...
+setopt AUTO_PUSHD
+setopt CDABLE_VARS
+zstyle ':completion:*:directory-stack' list-colors '=(#b) #([0-9]#)*( *)==1;34=1;36'
 
 # Exports
-export EDITOR="vim" # Use vim as editor
-export PATH=~/.bin:$PATH:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:~/Library/Android/sdk/tools:~/Library/Android/sdk/platform-tools
+export PATH=~/.bin:/usr/local/bin:$PATH:/usr/bin:/bin:/usr/sbin:/sbin:~/Library/Android/sdk/tools:~/Library/Android/sdk/platform-tools
+export EDITOR="subl -w"
+export WORKON_HOME=$HOME/.virtualenvs
+export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 # Aliases
-alias zshconfig="vim ~/.zshrc"
-alias zprezto="vim ~/.zprezto"
-alias zsource="source ~/.zshrc"
-alias zup="git -C ~/.zprezto pull && git -C ~/.zprezto submodule update --init --recursive"
-alias clr="rm -f ~/.zhistory && tab && exit"
-alias py="python3"
-alias adbt="adb connect 192.168.43.1"
-alias brewup="echo 'Updating brew formulae...'&&brew update&&echo 'Upgrading brew packages...'&&brew upgrade --all&&echo 'Cleaning up...'&&rm -rf $(brew --cache)"
-alias csl="ssh -t 2015etsung@remote.tjhsst.edu ssh\ ness"
-alias printers="lpstat -a"
-alias ll="ls -aFhl"
-alias nw="/Applications/node-webkit.app/Contents/MacOS/node-webkit"
-alias -g ...="../.."
-alias -g ....="../../.."
-alias -g .....="../../../.."
+alias adbt='adb connect 192.168.43.1'
+alias adbw='adb forward tcp:4444 localabstract:/adb-hub; adb connect localhost:4444'
+alias ascii='man ascii'
+alias brewup="echo 'Updating brew formulae...'&&brew update&&echo 'Upgrading brew packages...'&&brew upgrade --all&&echo 'Cleaning up...'&&brew cleanup&&rm -rf $(brew --cache)"
+alias clr='rm -f ~/.zhistory && tab && exit'
+alias cns='ssh el1t@ssh.cnsuva.io'
+alias csl='ssh et5ab@labunix01.cs.virginia.edu'
+alias free='sudo sync && sudo purge'
+alias kk='k -rh'
+alias mongod='mongod -f /usr/local/etc/mongod.conf'
+alias ngnl='npm list --depth=0'
+alias postgres='postgres -D /usr/local/var/postgres'
+alias printers='lpstat -a'
+alias py='python3'
+alias resume='print -P "\n The command is %Bfg%b, idiot\n"; fg'
+alias st='subl'
+alias zprezto='subl ~/.zprezto'
+alias zshconfig='subl ~/.zshrc'
+alias zsource='source ~/.zshrc'
+alias zupe='git -C ~/.zprezto submodule foreach git pull origin master && git -C ~/.zprezto submodule foreach "(git checkout master; git pull)&"'
+alias zup='git -C ~/.zprezto pull --recurse-submodules && git -C ~/.zprezto submodule update --init --recursive'
+alias -g ...='../..'
+alias -g ....='../../..'
+alias -g .....='../../../..'
+
+# Keybindings
+bindkey -s '^[z' ' ^u fg\n'
 
 # Directory hashes
 hash -d cs=~/Documents/School/Computer\ Sys
@@ -40,7 +57,35 @@ hash -d school=~/Documents/School
 hash -d trash=~/.Trash
 
 # Command functions
-function cps() {
+function gdl {
+	local -a branch list output
+	zparseopts -D b:=branch -branch:=branch \
+		o:=output -output:=output \
+		-ls=list
+	local option='export'
+	if [[ -n "$list" ]]; then
+		option='ls'
+	fi
+	if [[ -n "$1" ]]; then
+		if [[ -n "$branch" ]]; then
+			svn "$option" "https://github.com/$1/branches/$branch[2]/$2" "$output[2]"
+		else
+			svn "$option" "https://github.com/$1/trunk/$2" "$output[2]"
+		fi
+	else
+		print -P \
+"usage: gdl [--branch <branch>] [--output <directory>] <user> <repo>
+
+%BOPTIONS%b
+	-b, --branch <branch>
+		Specify a branch to use.
+
+	-o, --output <directory>
+		Specify an output directory."
+	fi
+}
+
+function cps {
 	local printer=accepting
 	if [[ -n $1 ]]; then
 		if [[ $1 -eq "-help" ]]; then
@@ -52,62 +97,39 @@ function cps() {
 	ssh -t 2015etsung@remote.tjhsst.edu "ssh -t ness 'lpstat -a'" | grep $printer
 }
 
-function cscp() {
-	if [[ -n $1 ]]; then
-		if [[ -n $2 ]]; then
-			echo "Sending to folder $2"
-			scp $1 2015etsung@remote.tjhsst.edu:$2
+function cscp {
+	local -a mirror_directory directory recursive
+	local flags
+	zparseopts -D m=mirror_directory -mirror=mirror_directory \
+		d:=directory -directory:=directory \
+		R=recursive r=recursive -recursive=recursive
+	flags='-p'
+	[[ -n $recursive ]] && flags+='r'
+	if [[ -n "$1" ]]; then
+		if [[ -n "$mirror_directory" ]]; then
+				local current_directory=$PWD
+				current_directory="${current_directory//$HOME/~}"
+				echo "Sending to folder $current_directory"
+				scp "$flags" "$@" et5ab@labunix01.cs.virginia.edu:"$current_directory"
+		elif [[ -n "$directory" ]]; then
+			echo "Sending to folder $directory[2]"
+			scp "$flags" "$@" et5ab@labunix01.cs.virginia.edu:"$directory[2]"
 		else
 			echo "Defaulting to ~/Documents folder."
-			scp $1 2015etsung@remote.tjhsst.edu:Documents
+			scp "$flags" "$@" et5ab@labunix01.cs.virginia.edu:Documents
 		fi
 	else
-		echo "usage: cscp local_file [remote_directory]"
-	fi
-}
+		print -P \
+"usage: cscp [--directory <directory>] [--mirror] [--recursive] file ...
 
-function cpr() {
-	local printer=Room_200
-	if [[ -n $1 ]]; then
-		if [[ -n $2 ]]; then
-			printer=$2
-		else
-			echo Printing to Room_200.
-		fi
-		ssh -t 2015etsung@remote.tjhsst.edu "ssh -t ness \"lpr -P $printer $1\""
-	else
-		echo "usage: cpr remote_file [printer]"
-	fi
-}
+%BOPTIONS%b
+	-d, --directory <remote_directory>
+		Specify a remote directory to use
 
-function csprint() {
-	local printer=Room_200
-	local remote_directory=Documents
-	local file_name=Error
-	if [[ -n $1 ]]; then
-		if [[ -n $2 ]]; then
-			if [[ -n $3 ]]; then
-				remote_directory=$2
-				printer=$3
-				echo "Sending to folder $2"
-				echo "Printing to $3"
-			else
-				printer=$2
-				echo "Defaulting to ~/Documents"
-				echo "Printing to $2"
-			fi
-		else
-			echo "Defaulting to ~/Documents"
-			echo "Printing to Room_200"
-		fi
-		file_name=$1
+	-m, --mirror
+		Transfer to identical directory on remote (overrides -d)
 
-		echo "===Sending File==="
-		scp $file_name 2015etsung@remote.tjhsst.edu:$remote_directory
-		echo "=====Printing====="
-		file_name=${${file_name//\ /\\ }##*/} # insert another "\" before spaces
-		ssh -t 2015etsung@remote.tjhsst.edu "ssh -t ness \"lpr -P $printer $remote_directory/$file_name\""
-	else
-		echo "usage: csprint local_file [printer|remote_directory printer]"
+	-R, -r, --recursive
+		Transfer a folder recursively"
 	fi
 }

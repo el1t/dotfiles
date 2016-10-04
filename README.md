@@ -1,13 +1,13 @@
 # dotfiles
 Opinions:
-- Mac OS X
-- Solarized (light)
+- MacOS
+- Solarized (dark)
 - Terminal.app
 - zsh + prezto
 - vim
 - tmux
 
-To setup some tools/defaults that I use, run
+To setup these tools/defaults that I use, run
 ```zsh
 zsh -c "$(curl -fsSL https://raw.githubusercontent.com/el1t/dotfiles/master/initialize)"
 ```
