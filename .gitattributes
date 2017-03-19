@@ -1,0 +1,3 @@
+.vim/** linguist-vendored
+.zprezto/runcoms/* linguist-language=sh
+/.tmux.conf linguist-language=sh
