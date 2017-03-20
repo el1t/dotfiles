@@ -1,17 +1,20 @@
 --[[
-tap ctrl  -> escape
+tap rctrl  -> escape
 tap shift -> corresponding paren
 
-rshift + hjkl -> ctrl + arrows
+lshift + asdf -> ctrl + arrows
 hold delay ctrl + hjkl -> vi mode
 ]]
 
 -- should override input
 local send = {
 	escape = true,
-	paren = true,
-	viMode = false,
-	viCtrlMode = false
+	paren = true
+}
+
+local modals = {
+	lshift = hs.hotkey.modal.new(),
+	rctrl = hs.hotkey.modal.new()
 }
 
 -- hs.keycodes.map does not include modifiers
@@ -36,7 +39,7 @@ local timers = {
 		send.paren = false
 	end),
 	viMode = hs.timer.delayed.new(0.20, function()
-		send.viMode = true
+		modals.rctrl:enter()
 	end)
 }
 
@@ -47,6 +50,26 @@ local viMode = {
 	[hs.keycodes.map.k] = hs.keycodes.map.up,
 	[hs.keycodes.map.l] = hs.keycodes.map.right
 }
+
+for key, code in pairs(viMode) do
+	modals.rctrl:bind({'ctrl'}, key,
+		function() hs.eventtap.event.newKeyEvent({}, code, true):post() end,
+		function() hs.eventtap.event.newKeyEvent({}, code, false):post() end,
+		function() hs.eventtap.event.newKeyEvent({}, code, true):post() end)
+end
+
+local ctrlBinds = {
+	a = hs.keycodes.map.down,
+	s = hs.keycodes.map.up,
+	d = hs.keycodes.map.left,
+	f = hs.keycodes.map.right
+}
+
+for key, code in pairs(ctrlBinds) do
+	modals.lshift:bind({'shift'}, key,
+		function() hs.eventtap.event.newKeyEvent({'ctrl'}, code, true):post() end,
+		function() hs.eventtap.event.newKeyEvent({'ctrl'}, code, false):post() end)
+end
 
 -- modifiers enabled in previous invocation
 local lastMods = hs.eventtap.checkKeyboardModifiers()
@@ -120,28 +143,32 @@ local ctrlToEsc = function(mods)
 		timers.viMode:stop()
 		timers.ctrl:stop()
 	end
-	send.viMode = false
+	modals.rctrl:exit()
 	lastMods.ctrl = mods.ctrl
 
 	return false
 end
 
 local leftShiftHandler = function(mods)
-	-- if left was pressed second
-	if lastMods.shift then
-		send.viCtrlMode = false
+	-- enable if left shift was pressed first
+	if not lastMods.shift then
+		modals.lshift:enter()
+	else
+		modals.lshift:exit()
 	end
 	return shiftToParens(true, mods)
 end
 
 local rightShiftHandler = function(mods)
-	-- enable if right shift was pressed first
-	send.viCtrlMode = not lastMods.shift
+	-- if right was pressed second
+	if lastMods.shift then
+		modals.lshift:exit()
+	end
 	return shiftToParens(false, mods)
 end
 
 local modifierHandlers = {
-	[keycodeMap.lctrl]  = ctrlToEsc,
+	[keycodeMap.rctrl]  = ctrlToEsc,
 	[keycodeMap.lshift] = leftShiftHandler,
 	[keycodeMap.rshift] = rightShiftHandler
 }
@@ -168,16 +195,6 @@ flagsChanged:start()
 other_tap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
 	send.escape = false
 	send.paren = false
-	-- if event:getFlags().fn then
-	if send.viMode or send.viCtrlMode then
-		local key = viMode[event:getKeyCode()]
-		if key then
-			-- event:setKeyCode(key)
-			-- event:setFlags({ctrl = true})
-			hs.eventtap.keyStroke({send.viCtrlMode and 'ctrl' or nil}, key, 1000)
-			return true
-		end
-	end
 	return false
 end)
 other_tap:start()
