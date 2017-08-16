@@ -1,0 +1,259 @@
+{
+  "title": "Custom modifications",
+  "rules": [{
+    "description": "Change caps_lock to rctrl if pressed with other keys, to escape if pressed alone.",
+    "manipulators": [{
+      "type": "basic",
+      "from": {
+        "key_code": "caps_lock",
+        "modifiers": {
+          "optional": [
+            "any"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "right_control"
+      }],
+      "to_if_alone": [{
+        "key_code": "escape"
+      }]
+    }]
+  }, {
+    "description": "Change lshift + a/s/d/f to rctrl + arrows",
+    "manipulators": [{
+      "type": "basic",
+      "from": {
+        "key_code": "a",
+        "modifiers": {
+          "mandatory": [
+            "left_shift"
+          ],
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "down_arrow",
+        "modifiers": [
+          "right_control"
+        ]
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "s",
+        "modifiers": {
+          "mandatory": [
+            "left_shift"
+          ],
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "up_arrow",
+        "modifiers": [
+          "right_control"
+        ]
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "d",
+        "modifiers": {
+          "mandatory": [
+            "left_shift"
+          ],
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "left_arrow",
+        "modifiers": [
+          "right_control"
+        ]
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "f",
+        "modifiers": {
+          "mandatory": [
+            "left_shift"
+          ],
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "right_arrow",
+        "modifiers": [
+          "right_control"
+        ]
+      }]
+    }]
+  }, {
+    "description": "Change rshift + h/j/k/l to arrows",
+    "manipulators": [{
+      "type": "basic",
+      "from": {
+        "key_code": "h",
+        "modifiers": {
+          "mandatory": [
+            "right_shift"
+          ],
+          "optional": [
+            "any"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "left_arrow"
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "j",
+        "modifiers": {
+          "mandatory": [
+            "right_shift"
+          ],
+          "optional": [
+            "any"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "down_arrow"
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "k",
+        "modifiers": {
+          "mandatory": [
+            "right_shift"
+          ],
+          "optional": [
+            "any"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "up_arrow"
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "l",
+        "modifiers": {
+          "mandatory": [
+            "right_shift"
+          ],
+          "optional": [
+            "any"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "right_arrow"
+      }]
+    }]
+  }, {
+    "description": "Change rshift -> lshift to caps lock",
+    "manipulators": [{
+      "type": "basic",
+      "from": {
+        "key_code": "left_shift",
+        "modifiers": {
+          "mandatory": [
+            "right_shift"
+          ],
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "caps_lock"
+      }],
+      "to_if_alone": [{
+        "key_code": "left_shift"
+      }]
+    }]
+  }, {
+    "description": "Space cadet parens",
+    "manipulators": [{
+      "type": "basic",
+      "from": {
+        "key_code": "left_shift",
+        "modifiers": {
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "left_shift"
+      }],
+      "to_if_alone": [{
+        "key_code": "9",
+        "modifiers": [
+          "left_shift"
+        ]
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "right_shift",
+        "modifiers": {
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "right_shift"
+      }],
+      "to_if_alone": [{
+        "key_code": "0",
+        "modifiers": [
+          "left_shift"
+        ]
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "right_shift",
+        "modifiers": {
+          "mandatory": [
+            "left_shift"
+          ],
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "9",
+        "modifiers": [
+          "left_shift"
+        ]
+      }, {
+        "key_code": "0",
+        "modifiers": [
+          "left_shift"
+        ]
+      }],
+      "to_if_alone": [{
+        "key_code": "right_shift"
+      }]
+    }]
+  }]
+}
