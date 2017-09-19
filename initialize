@@ -209,55 +209,6 @@ if [[ -d ~/.oh-my-zsh/ ]]; then
 fi
 
 #
-# Copy over config files into zshrc
-#
-
-if [[ "${SHELL:t}" != 'zsh' ]]; then
-	if [[ -z "$force" ]]; then
-		read -q input\?'Import config into zsh? (via sourcing originals, possible compatibility issues) [y] '
-		print
-	else
-		input='y'
-	fi
-	if [[ "$input" != 'n' ]]; then
-		unset input
-		echo 'importing old shell configs into zsh' | _initialize_msg
-		function import_config {
-			local input="$HOME/$1"
-			local output="${ZDOTDIR:-$HOME}/$2"
-			if [[ -s "$input" && -w "$output" ]]; then
-				echo "Importing $input to $output" | _initialize_echo_log
-				print -P "\n#\n# Import from ${SHELL:t}\n#\n\nsource $input" >>! "$output"
-			fi
-		}
-		case "${SHELL:t}" in
-			(bash)
-				import_config '.bashrc' '.zshrc'
-				import_config '.bash_profile' '.zprofile'
-				import_config '.bash_login' '.zlogin'
-				import_config '.bash_logout' '.zlogout'
-				;;
-			(ksh)
-				import_config '.kshrc' '.zshrc'
-				;;
-			(sh)
-				import_config '.shrc' '.zshrc'
-				;;
-			(*)
-				print -P "Importing from ${SHELL:t} is unsupported. No files were imported."
-				echo "${SHELL:t} import is unsupported" | _initialize_msg
-				;;
-		esac
-	else
-		unset input
-		echo 'skipped importing old shell configs' | _initialize_msg
-	fi
-	print -P '%B>>> Changing default shell to /bin/zsh%b'
-	echo 'chsh -s /bin/zsh' | _initialize_log
-	chsh -s /bin/zsh
-fi
-
-#
 # Vim setup
 #
 
@@ -342,6 +293,56 @@ zsh -c "set -- '-f'; $(curl -fsSL https://raw.githubusercontent.com/el1t/statusl
 # print -P '%B>>> Importing zpreztorc from el1t/dotfiles%b'
 # curl -fsSLo "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zpreztorc" \
 # 'https://raw.githubusercontent.com/el1t/dotfiles/master/.zprezto/runcoms/zpreztorc'
+
+
+#
+# Copy over config files into zshrc
+#
+
+if [[ "${SHELL:t}" != 'zsh' ]]; then
+	if [[ -z "$force" ]]; then
+		read -q input\?'Import config into zsh? (via sourcing originals, possible compatibility issues) [y] '
+		print
+	else
+		input='y'
+	fi
+	if [[ "$input" != 'n' ]]; then
+		unset input
+		echo 'importing old shell configs into zsh' | _initialize_msg
+		function import_config {
+			local input="$HOME/$1"
+			local output="${ZDOTDIR:-$HOME}/$2"
+			if [[ -s "$input" && -w "$output" ]]; then
+				echo "Importing $input to $output" | _initialize_echo_log
+				print -P "\n#\n# Import from ${SHELL:t}\n#\n\nsource $input" >>! "$output"
+			fi
+		}
+		case "${SHELL:t}" in
+			(bash)
+				import_config '.bashrc' '.zshrc'
+				import_config '.bash_profile' '.zprofile'
+				import_config '.bash_login' '.zlogin'
+				import_config '.bash_logout' '.zlogout'
+				;;
+			(ksh)
+				import_config '.kshrc' '.zshrc'
+				;;
+			(sh)
+				import_config '.shrc' '.zshrc'
+				;;
+			(*)
+				print -P "Importing from ${SHELL:t} is unsupported. No files were imported."
+				echo "${SHELL:t} import is unsupported" | _initialize_msg
+				;;
+		esac
+	else
+		unset input
+		echo 'skipped importing old shell configs' | _initialize_msg
+	fi
+	print -P '%B>>> Changing default shell to /bin/zsh%b'
+	echo 'chsh -s /bin/zsh' | _initialize_log
+	chsh -s /bin/zsh
+fi
 
 #
 # Mac specifics
