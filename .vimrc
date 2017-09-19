@@ -34,9 +34,12 @@ Plug 'vim-airline/vim-airline'			" Airline for vim
 
 " Format indenting
 "filetype indent					" Enable tabbing
+set autoindent
 set noexpandtab
 set tabstop=4					" Make tabs as wide as four spaces
-set shiftwidth=0				" Set tab button to insert tabstop-sized indent
+if v:version > 703
+	set shiftwidth=0				" Set tab button to insert tabstop-sized indent
+endif
 
 call plug#end()
 " }}}

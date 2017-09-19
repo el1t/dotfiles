@@ -17,20 +17,23 @@ zstyle ':completion:*:directory-stack' list-colors '=(#b) #([0-9]#)*( *)==1;34=1
 
 # Exports
 export PATH=~/.bin:/usr/local/bin:$PATH:/usr/bin:/bin:/usr/sbin:/sbin:~/Library/Android/sdk/tools:~/Library/Android/sdk/platform-tools
+export ANDROID_HOME=~/Library/Android/sdk
 export EDITOR="subl -w"
 export WORKON_HOME=$HOME/.virtualenvs
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 # Aliases
+alias activate="workon"
 alias adbt='adb connect 192.168.43.1'
 alias adbw='adb forward tcp:4444 localabstract:/adb-hub; adb connect localhost:4444'
 alias ascii='man ascii'
-alias brewup="echo 'Updating brew formulae...'&&brew update&&echo 'Upgrading brew packages...'&&brew upgrade --all&&echo 'Cleaning up...'&&brew cleanup&&rm -rf $(brew --cache)"
+alias brewup="echo 'Updating brew formulae...'&&brew update&&echo 'Upgrading brew packages...'&&brew upgrade&&echo 'Cleaning up...'&&brew cleanup&&rm -rf $(brew --cache)"
 alias clr='rm -f ~/.zhistory && tab && exit'
-alias cns='ssh el1t@ssh.cnsuva.io'
 alias csl='ssh et5ab@labunix01.cs.virginia.edu'
 alias free='sudo sync && sudo purge'
-alias kk='k -rh'
+alias k='exa'
+alias kk='exa -lha --git'
+alias ll='exa -l --git'
 alias mongod='mongod -f /usr/local/etc/mongod.conf'
 alias ngnl='npm list --depth=0'
 alias postgres='postgres -D /usr/local/var/postgres'
@@ -42,7 +45,8 @@ alias zprezto='subl ~/.zprezto'
 alias zshconfig='subl ~/.zshrc'
 alias zsource='source ~/.zshrc'
 alias zupe='git -C ~/.zprezto submodule foreach git pull origin master && git -C ~/.zprezto submodule foreach "(git checkout master; git pull)&"'
-alias zup='git -C ~/.zprezto pull --recurse-submodules && git -C ~/.zprezto submodule update --init --recursive'
+alias zup='git -C ~/.zprezto submodule update --recursive --remote'
+#alias zup='git -C ~/.zprezto pull --recurse-submodules && git -C ~/.zprezto submodule update --init --recursive'
 alias -g ...='../..'
 alias -g ....='../../..'
 alias -g .....='../../../..'
@@ -133,3 +137,200 @@ function cscp {
 		Transfer a folder recursively"
 	fi
 }
+
+function cpr {
+	local printer='Room_200'
+	if [[ -n $1 ]]; then
+		if [[ -n $2 ]]; then
+			printer=$2
+		else
+			echo Printing to Room_200.
+		fi
+		ssh -t 2015etsung@remote.tjhsst.edu "ssh -t ness \"lpr -P $printer $1\""
+	else
+		echo "usage: cpr remote_file [printer]"
+	fi
+}
+
+function csprint {
+	local printer='Room_200'
+	local remote_directory='Documents'
+	local file_name='Error'
+	if [[ -n $1 ]]; then
+		if [[ -n $2 ]]; then
+			if [[ -n $3 ]]; then
+				remote_directory=$2
+				printer=$3
+				echo "Sending to folder $2"
+				echo "Printing to $3"
+			else
+				printer=$2
+				echo "Defaulting to ~/Documents"
+				echo "Printing to $2"
+			fi
+		else
+			echo "Defaulting to ~/Documents"
+			echo "Printing to Room_200"
+		fi
+		file_name=$1
+
+		echo "===Sending File==="
+		scp $file_name 2015etsung@remote.tjhsst.edu:$remote_directory
+		echo "=====Printing====="
+		file_name=${${file_name//\ /\\ }##*/} # insert another "\" before spaces
+		ssh -t 2015etsung@remote.tjhsst.edu "ssh -t ness \"lpr -P $printer $remote_directory/$file_name\""
+	else
+		echo "usage: csprint local_file [printer|remote_directory printer]"
+	fi
+}
+
+# Run pngcrush and clean up output
+function crush {
+	local -a all opts overwrite junk
+	zparseopts -D -E a=all -all=all \
+		ow=overwrite -overwrite=overwrite \
+		brute=junk reduce=junk
+	unset junk
+	# Pass through options at beginning of input
+	local opt
+	for opt in "$@"; do
+		if [[ "$opt" == '-'* ]]; then
+			opts+="$opt"
+			shift
+		else
+			break
+		fi
+	done
+	if [[ -n "$all" ]]; then
+		local f
+		for f in "$@"; do
+			echo "pngcrush -brute -reduce -ow $opts $f"
+			pngcrush -brute -reduce -ow $opts "$f" 2>&1 | tail -n5 | head -n3
+		done
+	elif [[ -n "$overwrite" ]]; then
+		pngcrush -brute -reduce -ow $opts "$1" 2>&1 | tail -n5 | head -n3
+	elif [[ -n "$2" ]]; then
+		pngcrush -brute -reduce $opts "$1" "$2" 2>&1 | tail -n5 | head -n3
+	else
+		echo "Invalid args: $opts $@"
+	fi
+}
+
+# function osf {
+# 	local -a start all quit force
+# 	zparseopts -D s=start -start=start \
+# 		q=quit -quit=quit \
+# 		f=force -force=force \
+# 		a=all -all=all
+# 	[[ -n $force ]] && force='-9' || force='-15'
+# 	if [[ -n $start ]]; then
+# 		echo 'Starting server...'
+# 		cd ~repo/osf.io
+# 		workon osf
+# 		nohup invoke mongo -d 2>&1 >/dev/null &
+# 		sleep 1; bg
+# 		nohup invoke mailserver 2>&1 >/dev/null &
+# 		nohup invoke rabbitmq 2>&1 >/dev/null &
+# 		nohup invoke celery_worker 2>&1 >/dev/null &
+# 		nohup invoke elasticsearch 2>&1 >/dev/null &
+# 		nohup invoke assets -dw 2>&1 >/dev/null &
+# 		nohup invoke apiserver 2>&1 >/dev/null &
+# 		sleep 2
+# 		bg;bg;bg;bg;bg
+# 		nohup ./fakecas -dbaddress 127.0.0.1:27017 2>&1 >/dev/null &
+# 		invoke server
+# 	elif [[ -n $quit ]]; then
+# 		echo 'Stopping server...'
+# 		pkill "$force" fakecas
+# 		pkill "$force" python
+# 		pkill "$force" python2.7
+# 		pkill "$force" mongod
+# 		deactivate osf
+# 		rabbitmqctl stop
+# 		if [[ -n $all ]]; then
+# 			echo 'Quitting remaining services...'
+# 			pkill "$force" node
+# 			pkill "$force" java
+# 			pkill "$force" tmux
+# 		fi
+# 	elif [[ -n $all ]]; then
+# 		echo 'Starting apiserver...'
+# 		cd ~repo/osf.io
+# 		workon osf
+# 		nohup invoke mongo -d 2>&1 >/dev/null &
+# 		sleep 1; bg
+# 		nohup invoke apiserver 2>&1 >/dev/null &
+# 		sleep 1; bg
+# 		nohup ./fakecas -dbaddress 127.0.0.1:27017 2>&1 >/dev/null &
+# 	else
+# 		print -P \
+# 'usage: osf [--start] [--quit] [--force-quit]
+
+# %BOPTIONS%b
+# 	-s, --start
+# 		Start the server
+
+# 	-a, --api
+# 		Api server setup only
+
+# 	-q, --quit
+# 		Terminate all background processes (SIGTERM)
+
+# 	-fq, --force-quit
+# 		Stop all background processes (SIGKILL)'
+# 	fi
+# }
+
+# function osftmux {
+# 	workon osf
+# 	invoke mongo -d >/dev/null
+
+# 	tmux kill-session -t $USER
+# 	tmux -2 new-session -d -s $USER
+
+# 	# Setup panes
+# 	# tmux new-window -t $USER:1 -n 'Logs'
+# 	tmux select-window -t $USER:1
+# 	tmux split-window -h
+# 	tmux split-window -h
+# 	tmux select-layout even-horizontal
+# 	tmux split-window -v
+# 	tmux select-pane -t 0
+# 	tmux split-window -v
+# 	tmux select-pane -t 2
+# 	tmux split-window -v
+
+# 	# Send commands
+# 	tmux select-pane -t 0
+# 	tmux send-keys ' workon osf; invoke mailserver' C-m
+# 	tmux select-pane -t 1
+# 	tmux send-keys ' workon osf; invoke rabbitmq' C-m
+# 	tmux select-pane -t 2
+# 	tmux send-keys ' workon osf; invoke celery_worker' C-m
+# 	tmux select-pane -t 3
+# 	tmux send-keys ' workon osf; invoke elasticsearch' C-m
+# 	tmux select-pane -t 4
+# 	tmux send-keys ' ./fakecas -dbaddress 127.0.0.1:27017' C-m
+# 	tmux select-pane -t 5
+# 	tmux send-keys ' cd ../waterbutler;  workon waterbutler; invoke server' C-m
+
+# 	# Setup additional window
+# 	tmux new-window -t $USER:2 -n 'More logs'
+# 	tmux send-keys ' workon osf; invoke apiserver' C-m
+# 	tmux split-window -h
+# 	tmux send-keys ' workon osf; invoke assets -dw' C-m
+
+
+# 	# Setup server window
+# 	tmux new-window -t $USER:3 -n 'Server'
+# 	tmux send-keys ' workon osf; invoke server' C-m
+
+# 	# Set default window
+# 	tmux select-window -t $USER:1
+
+# 	# Attach to session
+# 	tmux -2 attach-session -t $USER
+# 	deactivate osf
+# }
+# added by travis gem
+[ -f /Users/El1t/.travis/travis.sh ] && source /Users/El1t/.travis/travis.sh
