@@ -53,9 +53,9 @@ if [[ -n "$force" ]]; then
 	local input min_zsh_version='5.0.0'
 	if ! autoload -Uz is-at-least || ! is-at-least "$min_zsh_version"; then
 		>&2 print "initialize: old shell detected, minimum supported: $min_zsh_version"
-		read -q input \?'Continue anyways? [yn] '
+		read -q input \?'Continue anyways? [n] '
 		echo
-		if [[ "$input" == 'n' ]] exit
+		if [[ "$input" != 'y' ]] exit
 		unset input
 		echo
 	fi
@@ -90,7 +90,7 @@ tl;dr: %B%UMacOS%u and %USolarized%u; %Uzsh%u not bash; %Uprezto%u not oh-my-zsh
 	if [[ "$OSTYPE" != darwin* ]] print -P '%F{1}%UWarning%u%f: Partial support for this OS'
 	if [[ -d ~/.oh-my-zsh/ ]] print -P '%F{1}%UWarning%u%f: oh-my-zsh will be uninstalled'
 	echo
-	read -q input\?'Continue? [yn] '
+	read -q input\?'Continue? [y] '
 	echo
 	if [[ "$input" == 'n' ]] exit
 	unset input
@@ -214,12 +214,12 @@ fi
 
 if [[ "${SHELL:t}" != 'zsh' ]]; then
 	if [[ -z "$force" ]]; then
-		read -q input\?'Import config into zsh? (via sourcing originals, possible compatibility issues) [yn] '
+		read -q input\?'Import config into zsh? (via sourcing originals, possible compatibility issues) [y] '
 		print
 	else
 		input='y'
 	fi
-	if [[ "$input" == 'y' ]]; then
+	if [[ "$input" != 'n' ]]; then
 		unset input
 		echo 'importing old shell configs into zsh' | _initialize_msg
 		function import_config {
@@ -288,11 +288,11 @@ fi
 # Setup .vimrc
 if [[ -s ~/.vimrc ]]; then
 	if [[ -z "$force" ]]; then
-		read -q input\?'Existing .vimrc detected, overwrite? [yn] '
+		read -q input\?'Existing .vimrc detected, overwrite? [y] '
 	else
 		input='y'
 	fi
-	if [[ "$input" == 'y' ]]; then
+	if [[ "$input" != 'n' ]]; then
 		echo 'mv ~/.vimrc ~/.vimrc_backup' | _initialize_log
 		mv ~/.vimrc ~/.vimrc_backup
 	fi
@@ -415,11 +415,11 @@ if [[ "$OSTYPE" == darwin* ]]; then
 
 	print '\nZsh is now the default shell.\n'
 	if [[ -z "$force" ]]; then
-		read -q input\?'Restart terminal? (recommended) [yn] '
+		read -q input\?'Restart terminal? (recommended) [y] '
 		echo
 	else
 		input='y'
 	fi
-	if [[ "$input" == 'y' ]] killall Terminal
+	if [[ "$input" != 'n' ]] killall Terminal
 fi
 unset input
