@@ -27,6 +27,8 @@ Plug 'tpope/vim-commentary'				" Comment things out
 Plug 'tpope/vim-unimpaired'				" Useful pairs of keymaps
 Plug 'airblade/vim-gitgutter'			" Git changes in gutter
 Plug 'scrooloose/nerdtree'				" NERDTree file browser
+Plug 'scrooloose/syntastic'				" Syntax checker
+Plug 'valloric/youcompleteme'           " Code completion
 Plug 'sjl/gundo.vim'					" Gundo undo tree browser
 Plug 'vim-airline/vim-airline'			" Airline for vim
 

@@ -234,42 +234,52 @@ if [[ ! -s ~/.vim/autoload/plug.vim ]]; then
 	print -P '%B>>> Installing vim-plug%b'
 	echo 'curl -fsSLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim' | _initialize_echo_log
 	curl -fsSLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim | _initialize_echo_log
+else
+	echo 'existing vim-plug installation detected' | _initialize_msg
 fi
 
-# Setup .vimrc
-if [[ -s ~/.vimrc ]]; then
-	if [[ -z "$force" ]]; then
-		read -q input\?'Existing .vimrc detected, overwrite? [y] '
+check_and_copy_file() {
+	if [[ -x ~/"$1" ]]; then
+		if [[ -z "$force" ]]; then
+			read -q input\?"Existing $1 detected, overwrite? [y] "
+		else
+			input='y'
+		fi
+		if [[ "$input" != 'n' ]]; then
+			echo "mv ~/.$1 ~/.$1_backup" | _initialize_log
+			mv ~/"$1" ~/"$1_backup"
+		fi
 	else
-		input='y'
+		echo "check_and_copy_file: ~/$1 did not exist" | _initialize_msg
 	fi
-	if [[ "$input" != 'n' ]]; then
-		echo 'mv ~/.vimrc ~/.vimrc_backup' | _initialize_log
-		mv ~/.vimrc ~/.vimrc_backup
+	if [[ ! -s ~/"$1" ]]; then
+		print -P "%B>>> Cloning $1%b"
+		echo "curl -fsSLo ~/.$1 https://raw.githubusercontent.com/el1t/dotfiles/master/$1" | _initialize_echo_log
+		curl -fsSLo ~/"$1" --create-dirs "https://raw.githubusercontent.com/el1t/dotfiles/master/$1" | _initialize_echo_log
+	else
+		echo "check_and_copy_file: skipped cloning ~/$1" | _initialize_msg
 	fi
-fi
-if [[ ! -s ~/.vimrc ]]; then
-	print -P '%B>>> Cloning .vimrc%b'
-	echo 'curl -fsSLo ~/.vimrc https://raw.githubusercontent.com/el1t/dotfiles/master/.vimrc' | _initialize_echo_log
-	curl -fsSLo ~/.vimrc https://raw.githubusercontent.com/el1t/dotfiles/master/.vimrc | _initialize_echo_log
-fi
+}
+
+# Setup .vimrc
+check_and_copy_file '.vimrc'
 
 # Install vim-plug plugins
 if (( $+commands[vim] )); then
 	input='y'
 	print -P '%B>>> Installing vim-plug plugins%b'
 	echo 'installing vim-plug plugins' | _initialize_msg
-	echo 'vim +PlugInstall' | _initialize_echo_log
-	vim +PlugInstall
+	echo 'vim +PlugInstall +qall' | _initialize_echo_log
+	vim +PlugInstall +qall
 else
 	input='n'
 	echo 'vim not found' | _initialize_msg
 	if [[ "$OSTYPE" == darwin* ]]; then
-		echo 'Postponing plugin installation until vim is installed'
+		print 'Postponing plugin installation until vim is installed'
 		echo 'vim plugins installation postponed' | _initialize_msg
 	else
 		print -P '%F{1}%UWarning%u%f: vim not detected
-After installation, please run %Bvim +PlugInstall%b to install plugins manually'
+After installation, please run %Bvim +PlugInstall +qall%b to install plugins manually'
 		echo 'vim plugins not installed' | _initialize_msg
 	fi
 fi
@@ -281,6 +291,17 @@ curl -fsSLo ~/.vim/plugins/vim-airline/autoload/airline/themes/powerline.vim \
 'https://raw.githubusercontent.com/el1t/dotfiles/master/.vim/plugins/vim-airline/autoload/airline/themes/powerline.vim'
 
 #
+# Setup other config files
+#
+
+local -a config_files
+local config_file
+config_files=('.tmux.conf' '.config/karabiner/assets/complex_modifications/custom.json')
+for config_file in $config_files; do
+	check_and_copy_file "$config_file"
+done
+
+#
 # Prezto and theme setup
 #
 
@@ -290,10 +311,9 @@ echo "zsh -c \"set -- '-f'; \$(curl -fsSL https://raw.githubusercontent.com/el1t
 # TODO: set matching flags for statusline script
 zsh -c "set -- '-f'; $(curl -fsSL https://raw.githubusercontent.com/el1t/statusline/master/prezto/install)"
 
-# print -P '%B>>> Importing zpreztorc from el1t/dotfiles%b'
-# curl -fsSLo "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zpreztorc" \
-# 'https://raw.githubusercontent.com/el1t/dotfiles/master/.zprezto/runcoms/zpreztorc'
-
+print -P '%B>>> Importing zsh config files from el1t/dotfiles%b'
+check_and_copy_file '.zprezto/runcoms/zpreztorc'
+check_and_copy_file '.zprezto/runcoms/zshrc'
 
 #
 # Copy over config files into zshrc
@@ -340,7 +360,7 @@ if [[ "${SHELL:t}" != 'zsh' ]]; then
 		echo 'skipped importing old shell configs' | _initialize_msg
 	fi
 	print -P '%B>>> Changing default shell to /bin/zsh%b'
-	echo 'chsh -s /bin/zsh' | _initialize_log
+	echo 'chsh -s /bin/zsh' | _initialize_echo_log
 	chsh -s /bin/zsh
 fi
 
@@ -404,15 +424,43 @@ if [[ "$OSTYPE" == darwin* ]]; then
 		ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 	fi
 	print -P '%B>>> Installing homebrew packages%b'
-	echo 'brew install python3 git vim' | _initialize_echo_log
-	brew install python3 git vim | _initialize_log
+	echo 'brew install python3 git vim cmake' | _initialize_echo_log
+	brew install python3 git vim cmake | _initialize_log
 
 	# If plugin installation was postponed
 	if [[ "$input" == 'n' ]]; then
 		print -P '%B>>> Installing vim-plug plugins%b'
-		echo 'vim +PlugInstall' | _initialize_echo_log
-		vim +PlugInstall
+		echo 'vim +PlugInstall +qall' | _initialize_echo_log
+		vim +PlugInstall +qall
 	fi
+
+	# Extra homebrew packages maintain compatibility with .zshrc
+	if [[ -z "$force" ]]; then
+		read -q input\?'Install extra homebrew packages? (exa node pngcrush tmux) [y] '
+		echo
+	else
+		input='y'
+	fi
+
+	if [[ "$input" != 'n' ]]; then
+		print -P '%B>>> Installing extra homebrew packages%b'
+		echo 'brew install exa node pngcrush tmux' | _initialize_echo_log
+		brew install exa node pngcrush tmux | _initialize_log
+	fi
+
+	# Finish vim-plug installations
+	print -P '%B>>> Completing vim plugin installation (~1min)'
+
+	print 'YouCompleteMe'
+	if [[ "$input" != 'n' ]]; then
+		# Install with javascript support
+		echo '~/.vim/plugins/YouCompleteMe/install.py --clang-completer --tern-completer' | _initialize_log
+		~/.vim/plugins/YouCompleteMe/install.py --clang-completer --tern-completer | _initialize_log
+	else
+		echo '~/.vim/plugins/YouCompleteMe/install.py --clang-completer' | _initialize_log
+		~/.vim/plugins/YouCompleteMe/install.py --clang-completer | _initialize_log
+	fi
+
 
 	print '\nZsh is now the default shell.\n'
 	if [[ -z "$force" ]]; then
@@ -422,5 +470,49 @@ if [[ "$OSTYPE" == darwin* ]]; then
 		input='y'
 	fi
 	if [[ "$input" != 'n' ]] killall Terminal
+
+#
+# Ubuntu/Debian installations
+#
+
+elif (( $+commands[apt-get] )); then
+	print -P '%B>>> Installing packages'
+	echo 'sudo apt-get update' | _initialize_echo_log
+	sudo apt-get update | _initialize_log
+	echo 'sudo apt-get upgrade' | _initialize_echo_log
+	sudo apt-get upgrade | _initialize_log
+
+	echo 'sudo apt-get install -y build-essential cmake python-dev python3-dev' | _initialize_echo_log
+	sudo apt-get install -y build-essential cmake python-dev python3-dev | _initialize_log
+
+	# Extra apt packages maintain compatibility with .zshrc
+	if [[ -z "$force" ]]; then
+		read -q input\?'Install extra apt packages? (node pngcrush tmux) [y] '
+		echo
+	else
+		input='y'
+	fi
+
+	if [[ "$input" != 'n' ]]; then
+		print -P '%B>>> Installing extra apt packages%b'
+		# Node 8.x
+		curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+		echo 'sudo apt-get install -y nodejs pngcrush tmux' | _initialize_echo_log
+		sudo apt-get install -y nodejs pngcrush tmux | _initialize_log
+	fi
+
+	# Finish vim-plug installations
+	print -P '%B>>> Completing vim plugin installation (~1min)'
+
+	print 'YouCompleteMe'
+	if [[ "$input" != 'n' ]]; then
+		# Install with javascript support
+		echo '~/.vim/plugins/YouCompleteMe/install.py --clang-completer --tern-completer' | _initialize_log
+		~/.vim/plugins/YouCompleteMe/install.py --clang-completer --tern-completer | _initialize_log
+	else
+		echo '~/.vim/plugins/YouCompleteMe/install.py --clang-completer' | _initialize_log
+		~/.vim/plugins/YouCompleteMe/install.py --clang-completer | _initialize_log
+	fi
 fi
+
 unset input
