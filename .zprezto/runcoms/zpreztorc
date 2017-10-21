@@ -40,8 +40,8 @@ zstyle ':prezto:load' pmodule \
   'fasd' \
   'ruby' \
   'python' \
-  'history-substring-search' \
   'syntax-highlighting' \
+  'history-substring-search' \
   'prompt'
 
 #
