@@ -41,6 +41,7 @@ alias printers='lpstat -a'
 alias py='python3'
 alias resume='print -P "\n The command is %Bfg%b, idiot\n"; fg'
 alias st='subl'
+alias vup='vim +PlugUpgrade +PlugUpdate'
 alias zprezto='subl ~/.zprezto'
 alias zshconfig='subl ~/.zshrc'
 alias zsource='source ~/.zshrc'
@@ -88,6 +89,54 @@ function gdl {
 		Specify an output directory."
 	fi
 }
+
+function upgradevirtualenv {
+	if [[ -z "$1" ]]; then
+		echo "usage: $0 <virtualenv>|'all' <python_version>"
+		return 1
+	fi
+	if [[ -z "$WORKON_HOME" ]]; then
+		echo '$WORKON_HOME must be exported'
+		return 1
+	fi
+	if [[ "$1" == 'all' ]]; then
+		for name in $(find "$WORKON_HOME" -type d -maxdepth 1 -mindepth 1|xargs -n1 basename); do
+			$0 $name $2
+		done
+		return
+	fi
+	if [[ ! -d "$WORKON_HOME/$1" ]]; then
+		echo "virtualenv '$1' not found"
+		return 1
+	fi
+	if [[ "$2" == 'python*' ]]; then
+		echo "unrecognized '$2'"
+		return 1
+	fi
+
+	pushd "$WORKON_HOME"
+	setopt LOCAL_OPTIONS RM_STAR_SILENT EXTENDED_GLOB
+	echo "Deleting $1"
+	rm -f  "$1"/.Python
+	rm -f  "$1"/bin/pip{,3,3.*}
+	rm -f  "$1"/bin/python{,3,3.*}
+	rm -rf "$1"/include
+	rm -f  "$1"/lib/python3.*/* 2> /dev/null
+	rm -rf "$1"/lib/python3.*/distutils
+	rm -f  "$1"/lib/python3.*/site-packages/easy_install.*
+	rm -rf "$1"/lib/python3.*/site-packages/pip
+	rm -rf "$1"/lib/python3.*/site-packages/pip-*.dist-info
+	rm -rf "$1"/lib/python3.*/site-packages/setuptools
+	rm -rf "$1"/lib/python3.*/site-packages/setuptools-*.dist-info
+
+	source $(which virtualenvwrapper.sh)
+
+	echo "Recreating $1"
+	mkvirtualenv -q "$1" --python="$2"
+	popd
+}
+# Add tab completion
+compctl -K _virtualenvs upgradevirtualenv
 
 function cps {
 	local printer=accepting
@@ -212,7 +261,8 @@ function crush {
 	elif [[ -n "$2" ]]; then
 		pngcrush -brute -reduce $opts "$1" "$2" 2>&1 | tail -n5 | head -n3
 	else
-		echo "Invalid args: $opts $@"
+		if [[ -n "$@" ]] echo "Invalid args: $opts $@"
+		echo 'Usage: crush [-ow | --overwrite] [-a | --all] [additional options for pngcrush] file'
 	fi
 }
 
