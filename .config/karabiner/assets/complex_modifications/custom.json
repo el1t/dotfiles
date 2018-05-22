@@ -45,11 +45,11 @@
       }]
     }]
   }, {
-    "description": "Change lshift + a/s/d/f to rctrl + arrows",
+    "description": "Change lshift + wasd to rctrl + arrows",
     "manipulators": [{
       "type": "basic",
       "from": {
-        "key_code": "a",
+        "key_code": "s",
         "modifiers": {
           "mandatory": [
             "left_shift"
@@ -68,7 +68,7 @@
     }, {
       "type": "basic",
       "from": {
-        "key_code": "s",
+        "key_code": "w",
         "modifiers": {
           "mandatory": [
             "left_shift"
@@ -87,7 +87,7 @@
     }, {
       "type": "basic",
       "from": {
-        "key_code": "d",
+        "key_code": "a",
         "modifiers": {
           "mandatory": [
             "left_shift"
@@ -106,7 +106,7 @@
     }, {
       "type": "basic",
       "from": {
-        "key_code": "f",
+        "key_code": "d",
         "modifiers": {
           "mandatory": [
             "left_shift"
@@ -118,6 +118,89 @@
       },
       "to": [{
         "key_code": "right_arrow",
+        "modifiers": [
+          "right_control"
+        ]
+      }]
+    }]
+  }, {
+    "description": "Change caps + lshift + wasd to rctrl + rshift + fn + arrows",
+    "manipulators": [{
+      "type": "basic",
+      "from": {
+        "key_code": "s",
+        "modifiers": {
+          "mandatory": [
+            "left_shift",
+            "right_control"
+          ],
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "page_down",
+        "modifiers": [
+          "right_control"
+        ]
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "w",
+        "modifiers": {
+          "mandatory": [
+            "left_shift",
+            "right_control"
+          ],
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "page_up",
+        "modifiers": [
+          "right_control"
+        ]
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "a",
+        "modifiers": {
+          "mandatory": [
+            "left_shift",
+            "right_control"
+          ],
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "home",
+        "modifiers": [
+          "right_control"
+        ]
+      }]
+    }, {
+      "type": "basic",
+      "from": {
+        "key_code": "d",
+        "modifiers": {
+          "mandatory": [
+            "left_shift",
+            "right_control"
+          ],
+          "optional": [
+            "caps_lock"
+          ]
+        }
+      },
+      "to": [{
+        "key_code": "end",
         "modifiers": [
           "right_control"
         ]
