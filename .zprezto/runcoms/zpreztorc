@@ -143,6 +143,7 @@ zstyle ':prezto:module:syntax-highlighting' styles \
   'function' 'none' \
   'alias' 'none' \
   'redirection' 'fg=13,bold' \
+  'autodirectory' 'fg=cyan' \
   'path' 'fg=cyan' \
   'path_approx' 'none' \
   'path_prefix' 'none' \
