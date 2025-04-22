@@ -155,7 +155,7 @@ zstyle ':prezto:module:syntax-highlighting' styles \
   'bracket-level-7' 'fg=13,bold' \
 
 # Set syntax highlighting patterns
-zstyle ':prezto:module:syntax-highlighting' patterns \
+zstyle ':prezto:module:syntax-highlighting' pattern \
   'sudo' 'fg=magenta,bold'
 
 #
