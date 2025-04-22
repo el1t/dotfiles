@@ -13,10 +13,11 @@ fi
 # Customize to your needs...
 setopt AUTO_PUSHD
 setopt CDABLE_VARS
+setopt HIST_IGNORE_ALL_DUPS
 zstyle ':completion:*:directory-stack' list-colors '=(#b) #([0-9]#)*( *)==1;34=1;36'
 
 # Exports
-export PATH=~/.bin:/usr/local/bin:$PATH:/usr/bin:/bin:/usr/sbin:/sbin:~/Library/Android/sdk/tools:~/Library/Android/sdk/platform-tools
+export PATH=~/.bin:$PATH:/usr/bin:/bin:/usr/sbin:/sbin:~/Library/Android/sdk/tools:~/Library/Android/sdk/platform-tools
 export ANDROID_HOME=~/Library/Android/sdk
 export EDITOR="subl -w"
 export WORKON_HOME=$HOME/.virtualenvs
@@ -29,7 +30,6 @@ alias adbw='adb forward tcp:4444 localabstract:/adb-hub; adb connect localhost:4
 alias ascii='man ascii'
 alias brewup="echo 'Updating brew formulae...'&&brew update&&echo 'Upgrading brew packages...'&&brew upgrade&&echo 'Cleaning up...'&&brew cleanup&&rm -rf $(brew --cache)"
 alias clr='rm -f ~/.zhistory && tab && exit'
-alias csl='ssh et5ab@labunix01.cs.virginia.edu'
 alias free='sudo sync && sudo purge'
 alias k='exa'
 alias kk='exa -lha --git'
@@ -56,9 +56,7 @@ alias -g .....='../../../..'
 bindkey -s '^[z' ' ^u fg\n'
 
 # Directory hashes
-hash -d cs=~/Documents/School/Computer\ Sys
 hash -d repo=~/Documents/Repo
-hash -d school=~/Documents/School
 hash -d trash=~/.Trash
 
 # Command functions
@@ -382,5 +380,3 @@ function crush {
 # 	tmux -2 attach-session -t $USER
 # 	deactivate osf
 # }
-# added by travis gem
-[ -f /Users/El1t/.travis/travis.sh ] && source /Users/El1t/.travis/travis.sh
